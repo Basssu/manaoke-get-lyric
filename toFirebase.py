@@ -16,6 +16,8 @@ from firebase_admin import firestore
 
 params = sys.argv[1:]
 video_id = params[0]
+flavor = params[1]
+print(flavor)
 
 with open(f'videos/{video_id}/firestore.json', 'r') as f:
     json_data = json.load(f)
@@ -26,19 +28,26 @@ publishedAtDatetime = datetime.datetime.strptime(firestoreDict["publishedAt"], "
 translatedFrom = firestoreDict["translatedFrom"]
 translatedTo = firestoreDict["translatedTo"]
 
-cred = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
+if flavor == "prod":
+    cred = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
+    domain = "manaoke-8c082.appspot.com"
+else:
+    cred = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
+    domain = "manaoke-stg.appspot.com"
+
 documentId = f'{translatedFrom}_{translatedTo}_{video_id}'
-firebase_admin.initialize_app(cred,{'storageBucket': f'gs://manaoke-stg.appspot.com'})
+
+firebase_admin.initialize_app(cred,{'storageBucket': f'gs://{domain}'})
 
 path = f'videos/{video_id}/'
 filename = f'videos/{documentId}/allData.json'
-bucket = storage.bucket('manaoke-stg.appspot.com')
+bucket = storage.bucket(domain)
 blob = bucket.blob(filename)
 token = uuid4()
 metadata = {"firebaseStorageDownloadTokens": token}
 blob.metadata = metadata
 blob.upload_from_filename(f'videos/{video_id}/allData.json')
-url = f'https://firebasestorage.googleapis.com/v0/b/manaoke-stg.appspot.com/o/videos%2F{documentId}%2FallData.json?alt=media&token={token}'
+url = f'https://firebasestorage.googleapis.com/v0/b/{domain}/o/videos%2F{documentId}%2FallData.json?alt=media&token={token}'
 print(url)
 
 firestoreDict["jsonUrl"] = url

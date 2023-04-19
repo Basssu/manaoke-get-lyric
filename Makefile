@@ -1,22 +1,4 @@
-# videoId = 6ZUIwj3FgUY
-
-# run:
-# 	python captionToTxt.py $(videoId)
-# 	node hangulToKatakana.js $(videoId)
-# 	python txtToJson.py $(videoId)
-
-# for文を使ったルール定義
-# all:
-#     for videoId in $(videoIds) ; do \
-#         python captionToTxt.py $(videoId)
-# 		node hangulToKatakana.js $(videoId)
-# 		python txtToJson.py $(videoId)
-#     done
-
-# Makefile
-
-# videoIds配列にビデオIDを追加する
-videoIds = _ZAgIHmHLdc
+videoIds = -L7eMf6Yf84
 
 .PHONY: all
 
@@ -28,4 +10,5 @@ $(videoIds):
 	python captionToTxt.py $@
 	node hangulToKatakana.js $@
 	python txtToJson.py $@
-	python toFirebase.py $@
+	python toFirebase.py $@ stg
+#↑stgをprodに書き換えて本番環境にアップロード

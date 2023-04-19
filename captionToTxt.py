@@ -22,6 +22,8 @@ def outputFirestoreJson(video_id):
         publishedAt = response['items'][0]['snippet']['publishedAt']
         channelTitle = response['items'][0]['snippet']['channelTitle'] 
 
+        pprint.pprint(response)
+
         firestoreData = {
             "category": "music",
             "celebrityIds": None,
