@@ -4,7 +4,6 @@ import mecab_ko_dic
 import requests
 import sys
 import pprint as goodPrint
-sys.path.append('/opt/homebrew/lib/python3.10/site-packages')
 from konlpy.tag import Okt
 from konlpy.utils import pprint
 

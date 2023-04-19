@@ -5,11 +5,6 @@ import pprint
 from requests_oauthlib import OAuth1
 import os
 import json
-# from youtube_transcript_api import YouTubeTranscriptApi
-# from googleapiclient.discovery import build
-# from googleapiclient.errors import HttpError
-import sys
-sys.path.append('/opt/homebrew/lib/python3.10/site-packages')
 from apiclient.discovery import build
 
 
@@ -25,22 +20,69 @@ def outputFirestoreJson(video_id):
         title = response['items'][0]['snippet']['title']
         channelId = response['items'][0]['snippet']['channelId']
         publishedAt = response['items'][0]['snippet']['publishedAt']
-        channelTitle = response['items'][0]['snippet']['channelTitle']
+        channelTitle = response['items'][0]['snippet']['channelTitle'] 
 
         firestoreData = {
-            "videoId": video_id,
-            "youtubeTitle": title,
-            "title": None,
+            "category": "music",
+            "celebrityIds": None,
             "channelId": channelId,
+            "channelTitle": channelTitle,
+            "isInvisible": False,
+            "jsonUrl": None,
+            "playlistIds": None,
             "publishedAt": publishedAt,
             "publishedIn": int(publishedAt.split("-")[0]),
-            "channelTitle": channelTitle,
-            "artist": None,
+            "title": None,
             "translatedFrom": "ko",
-            "translatedTo": "ja",
-            "jsonUrl": None,
-            "category": "music"
+            "translatedFrom": "ja",
+            "videoId": video_id,
+            "youtubeTitle": title,
         }
+
+        print("これがjsonDataです:")
+        pprint.pprint(firestoreData)
+
+        while 1:
+            print("タイトルはなんですか？")
+            title = input()
+
+            print("含まれているアーティストのCelebrityIdを入力してください。複数ある場合は','で区切ってください")
+            celebrityIdsStr = input()
+            celebrityIds = celebrityIdsStr.split(",")
+
+            print("含まれているプレイリストのplaylistIdを入力してください。複数ある場合は','で区切ってください")
+            playlistIdsStr = input()
+            if playlistIdsStr == "":
+                playlistIds = []
+            else:
+                playlistIds = playlistIdsStr.split(",")
+
+            isPremium = False
+            while 1:
+                print("これはpremium動画ですか？(y/n)")
+                isPremiumYN = input()
+                if isPremiumYN == "y":
+                    isPremium = True
+                    break
+                if isPremiumYN == "n":
+                    isPremium = False
+                    break
+        
+            print("これでよろしいですか？(y/n)")
+            pprint.pprint({
+                "title": title,
+                "celebrityIds": celebrityIds,
+                "playlistIds": playlistIds,
+                "isPremium": isPremium
+            })
+            isGood = input()
+            if isGood == "y":
+                firestoreData["title"] = title
+                firestoreData["celebrityIds"] = celebrityIds
+                firestoreData["playlistIds"] = playlistIds
+                firestoreData["isPremium"] = isPremium
+                break
+
 
         json_data = json.dumps(firestoreData, indent=4, ensure_ascii=False)
 
@@ -122,11 +164,11 @@ def write_srt_file(korean_subtitle_list, japanese_subtitle_list, file_name, type
             file.write(str(i + 1) + '\n')
             file.write(start_time_str + ' --> ' + end_time_str + '\n')
             if(type != "onlyJa"):
-                file.write(korean_subtitle_text + '\n')
+                file.write(korean_subtitle_text.replace("\n", " ") + '\n')
             # file.write(meaning + '\n')
             if(type != "onlyKa"):
                 japanese_subtitle_text = japanese_subtitle_list[i]['text']
-                file.write(japanese_subtitle_text + '\n')
+                file.write(japanese_subtitle_text.replace("\n", " ") + '\n')
             file.write('\n')
 
             # print(str(i + 1))
