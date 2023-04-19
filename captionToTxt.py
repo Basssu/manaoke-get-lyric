@@ -45,6 +45,12 @@ def outputFirestoreJson(video_id):
         pprint.pprint(firestoreData)
 
         while 1:
+            while 1:
+                print("カテゴリはvideoかmusicどっち？(v/m)")
+                category = input()
+                if category == "v" or category == "m":
+                    break
+            
             print("タイトルはなんですか？")
             title = input()
 
@@ -75,7 +81,8 @@ def outputFirestoreJson(video_id):
                 "title": title,
                 "celebrityIds": celebrityIds,
                 "playlistIds": playlistIds,
-                "isPremium": isPremium
+                "isPremium": isPremium,
+                "category": category
             })
             isGood = input()
             if isGood == "y":
@@ -83,6 +90,7 @@ def outputFirestoreJson(video_id):
                 firestoreData["celebrityIds"] = celebrityIds
                 firestoreData["playlistIds"] = playlistIds
                 firestoreData["isPremium"] = isPremium
+                firestoreData["category"] = category
                 break
 
 
@@ -191,14 +199,17 @@ params = sys.argv[1:]
 video_id = params[0]
 
 # 韓国語字幕をダウンロード
-korean_subtitle_list = download_korean_subtitle(video_id)
+korean_subtitle_list1 = download_korean_subtitle(video_id)
 
 # 日本語字幕をダウンロード
-japanese_subtitle_list = download_japanese_subtitle(video_id)
-
+japanese_subtitle_list1 = download_japanese_subtitle(video_id)
+# 両方の配列を見て、"duration"と"start"の値が一致する要素を抽出
+korean_subtitle_list = [item for item in korean_subtitle_list1 if any(item["duration"] == j_item["duration"] and item["start"] == j_item["start"] for j_item in japanese_subtitle_list1)]
+japanese_subtitle_list = [item for item in japanese_subtitle_list1 if any(item["duration"] == k_item["duration"] and item["start"] == k_item["start"] for k_item in korean_subtitle_list1)]
 # ファイルに書き込む
 if korean_subtitle_list is None or japanese_subtitle_list is None or len(japanese_subtitle_list) != len(korean_subtitle_list):
-    print('subtitle is not available for this video.')
+    print('subtitle is not available for this video.:')
+    print(video_id)
     exit
 
 if not os.path.exists('videos'):
