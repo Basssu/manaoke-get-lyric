@@ -28,3 +28,4 @@ $(videoIds):
 	python captionToTxt.py $@
 	node hangulToKatakana.js $@
 	python txtToJson.py $@
+	python toFirebase.py $@

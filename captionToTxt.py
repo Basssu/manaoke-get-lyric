@@ -34,7 +34,7 @@ def outputFirestoreJson(video_id):
             "publishedIn": int(publishedAt.split("-")[0]),
             "title": None,
             "translatedFrom": "ko",
-            "translatedFrom": "ja",
+            "translatedTo": "ja",
             "videoId": video_id,
             "youtubeTitle": title,
         }
