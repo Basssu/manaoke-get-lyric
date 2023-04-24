@@ -57,6 +57,15 @@ with open(f'videos/{video_id}/firestore.json', 'w') as f:
     f.write(json_data)
 
 firestoreDict["publishedAt"] = publishedAtDatetime
+firestoreDict["updatedAt"] = datetime.datetime.now()
 db= firestore.client()
 doc_ref = db.collection('videos').document(documentId)
-doc_ref.set(firestoreDict)
+
+# ドキュメントの存在を確認
+doc = doc_ref.get()
+if doc.exists:
+    # 既存のドキュメントがある場合はフィールドの値を更新
+    doc_ref.update(firestoreDict)
+else:
+    # 存在しない場合は新しいドキュメントを作成
+    doc_ref.set(firestoreDict)

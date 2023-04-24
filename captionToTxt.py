@@ -8,7 +8,14 @@ import json
 from apiclient.discovery import build
 
 
+
 def outputFirestoreJson(video_id):
+    #ここのパラメーターを決める
+    celebrityIds = [] #いちいち決める場合は[]
+    isTitleSame = False
+    category = "music" #いちいち決める場合はNone。それ以外はmusicかvideoを選択
+    playlistIds = [] #いちいち決める場合は[]
+
     try:
         # YouTubeのAPIキーを設定する
         api_key = 'AIzaSyCsm_qh58EORAOD8e00AXYDdlyT4yKRq2Y'
@@ -21,6 +28,7 @@ def outputFirestoreJson(video_id):
         channelId = response['items'][0]['snippet']['channelId']
         publishedAt = response['items'][0]['snippet']['publishedAt']
         channelTitle = response['items'][0]['snippet']['channelTitle'] 
+        thumbnailUrl = response['items'][0]['snippet']['thumbnails']['medium']['url']
 
         pprint.pprint(response)
 
@@ -34,6 +42,7 @@ def outputFirestoreJson(video_id):
             "playlistIds": None,
             "publishedAt": publishedAt,
             "publishedIn": int(publishedAt.split("-")[0]),
+            "thumbnailUrl": thumbnailUrl,
             "title": None,
             "translatedFrom": "ko",
             "translatedTo": "ja",
@@ -45,36 +54,45 @@ def outputFirestoreJson(video_id):
         pprint.pprint(firestoreData)
 
         while 1:
-            while 1:
-                print("カテゴリはvideoかmusicどっち？(v/m)")
-                category = input()
-                if category == "v" or category == "m":
-                    break
+            if category == None:
+                while 1:
+                    print("カテゴリはvideoかmusicどっち？(v/m)")
+                    category = input()
+                    if category == "v" or category == "m":
+                        if category == "v":
+                            category = "video"
+                        else:
+                            category = "music"
+                        break
             
-            print("タイトルはなんですか？")
-            title = input()
+            if not isTitleSame:
+                print("タイトルはなんですか？")
+                title = input()
 
-            print("含まれているアーティストのCelebrityIdを入力してください。複数ある場合は','で区切ってください")
-            celebrityIdsStr = input()
-            celebrityIds = celebrityIdsStr.split(",")
+            if bool(celebrityIds) == False:
+                print("含まれているアーティストのCelebrityIdを入力してください。複数ある場合は','で区切ってください")
+                celebrityIdsStr = input()
+                celebrityIds = celebrityIdsStr.split(",")
 
-            print("含まれているプレイリストのplaylistIdを入力してください。複数ある場合は','で区切ってください")
-            playlistIdsStr = input()
-            if playlistIdsStr == "":
-                playlistIds = []
-            else:
-                playlistIds = playlistIdsStr.split(",")
+            if bool(playlistIds) == False:
+                print("含まれているプレイリストのplaylistIdを入力してください。複数ある場合は','で区切ってください")
+                playlistIdsStr = input()
+                if playlistIdsStr == "":
+                    playlistIds = []
+                else:
+                    playlistIds = playlistIdsStr.split(",")
 
             isPremium = False
-            while 1:
-                print("これはpremium動画ですか？(y/n)")
-                isPremiumYN = input()
-                if isPremiumYN == "y":
-                    isPremium = True
-                    break
-                if isPremiumYN == "n":
-                    isPremium = False
-                    break
+            #プレミアム設定は一旦なし
+            # while 1:
+            #     print("これはpremium動画ですか？(y/n)")
+            #     isPremiumYN = input()
+            #     if isPremiumYN == "y":
+            #         isPremium = True
+            #         break
+            #     if isPremiumYN == "n":
+            #         isPremium = False
+            #         break
         
             print("これでよろしいですか？(y/n)")
             pprint.pprint({
