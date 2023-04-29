@@ -11,13 +11,22 @@ DEVELOPER_KEY = "AIzaSyCsm_qh58EORAOD8e00AXYDdlyT4yKRq2Y"
 
 def addVideos(latestVideoIdInFirestore, playlist_id):
     try:
-        playlist_items_response = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=playlist_id,
-            maxResults=50,
-            ).execute()
+        next_page_token = None
+        playlist_items = []
+        for i in range(50):
+            playlist_items_response = youtube.playlistItems().list(
+                part="snippet",
+                playlistId=playlist_id,
+                maxResults=1,
+                pageToken=next_page_token
+                ).execute()
+            if playlist_items_response["items"][0]["snippet"]["resourceId"]["videoId"] == latestVideoIdInFirestore:
+                break
+            playlist_items.append(playlist_items_response["items"][0])
+            next_page_token = playlist_items_response.get('nextPageToken')
+            
         
-        for playlist_item in playlist_items_response["items"]:
+        for playlist_item in playlist_items:
             video_id = playlist_item["snippet"]["resourceId"]["videoId"]
             video_published_at = datetime.datetime.fromisoformat(playlist_item['snippet']['publishedAt'].replace('Z', '+00:00'))
             # 指定した動画よりも新しい投稿日時の動画IDを取得する
