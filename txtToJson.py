@@ -7,7 +7,6 @@ import pprint as goodPrint
 from konlpy.tag import Okt
 from konlpy.utils import pprint
 
-
 def should_translate(word_info):
     pos = word_info[1]['pos']
     # 名詞、動詞、形容詞、副詞は翻訳する
@@ -36,6 +35,8 @@ def analysis(text):
     for line in lines.split("\n"):
         split_line = line.split("\t")
         word = split_line[0]
+        if word == ' ' or word == u'\xa0':
+            continue
         if word == "EOS":
             break
         features = split_line[1].split(",")
