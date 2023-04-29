@@ -4,7 +4,7 @@ import pprint
 
 # YouTube Data APIのAPIキーを設定
 API_KEY = 'AIzaSyCsm_qh58EORAOD8e00AXYDdlyT4yKRq2Y'  # 自分のAPIキーに置き換える
-PLAYLIST_ID = 'PLNy-PdPlJT7EW4KwMfEOk_58Niq7gm-_0'  # 取得したい再生リストのIDに置き換える
+PLAYLIST_ID = 'PLNy-PdPlJT7G7n7GG3zS-bsDcM9QTvwk_'  # 取得したい再生リストのIDに置き換える
 
 def get_video_ids_with_subtitles(api_key, playlist_id):
     youtube = build('youtube', 'v3', developerKey=api_key)

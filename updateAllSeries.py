@@ -3,17 +3,64 @@ from firebase_admin import credentials, firestore
 import google.auth
 from googleapiclient.discovery import build
 import datetime
+from googleapiclient.errors import HttpError
+
+flavor = "prod"
+video_ids = []
+DEVELOPER_KEY = "AIzaSyCsm_qh58EORAOD8e00AXYDdlyT4yKRq2Y"
+
+def addVideos(latestVideoIdInFirestore, playlist_id):
+    try:
+        playlist_items_response = youtube.playlistItems().list(
+            part="snippet",
+            playlistId=playlist_id,
+            maxResults=50,
+            ).execute()
+        
+        for playlist_item in playlist_items_response["items"]:
+            video_id = playlist_item["snippet"]["resourceId"]["videoId"]
+            video_published_at = datetime.datetime.fromisoformat(playlist_item['snippet']['publishedAt'].replace('Z', '+00:00'))
+            # 指定した動画よりも新しい投稿日時の動画IDを取得する
+            if latestVideoIdInFirestore == video_id:
+                break
+            if video_published_at < publishedAt:
+                continue
+            captions = youtube.captions().list(
+                part='snippet',
+                videoId=video_id
+                ).execute()
+            languageCount = 0
+            for caption in captions['items']:
+                if caption['snippet']['language'] == 'ja' and caption['snippet']['trackKind'] == 'standard':
+                    languageCount = languageCount + 1
+                    break
+                
+            for caption in captions['items']:
+                if caption['snippet']['language'] == 'ko' and caption['snippet']['trackKind'] == 'standard':
+                    languageCount = languageCount + 1
+                    break
+                
+            if languageCount == 2:
+                video_ids.append(video_id)
+
+    except HttpError as e:
+        print("An HTTP error occurred: %s" % e)
+        exit
 
 # Firebase Admin SDKの初期化
-creds = credentials.Certificate("path/to/serviceAccountKey.json")
+if flavor == "prod":
+    creds = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
+    domain = "manaoke-8c082.appspot.com"
+else:
+    creds = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
+    domain = "manaoke-stg.appspot.com"
 firebase_admin.initialize_app(creds)
 
 # Firestoreのクライアント作成
 db = firestore.client()
 
-# Youtube Data APIの認証
-creds, _ = google.auth.default()
-youtube = build('youtube', 'v3', credentials=creds)
+# YouTube Data APIを利用するためのオブジェクトを作成する
+youtube = build("youtube", "v3", developerKey=DEVELOPER_KEY)
 
 # newVideoIdsの初期化
 newVideoIds = []
@@ -26,7 +73,6 @@ series_docs = series_ref.get()
 for doc in series_docs:
     # playlistIdとcelebritiesの取得
     playlistId = doc.get('playlistId')
-    celebrities = doc.get('celebrities')
     
     # playlistIdが含まれるvideoドキュメントのうち、publishedAtが最新のものを取得
     videos_ref = db.collection('videos')
@@ -39,49 +85,7 @@ for doc in series_docs:
     video_doc = video_docs[0]
     videoId = video_doc.get('videoId')
     publishedAt = video_doc.get('publishedAt')
-    
-    # Youtube Data APIで再生リストを検索
-    playlist_response = youtube.playlists().list(
-        part='snippet',
-        id=playlistId
-    ).execute()
-    
-    if 'items' not in playlist_response:
-        continue
-        
-    playlist_item = playlist_response['items'][0]
-    playlist_publishedAt = datetime.datetime.fromisoformat(playlist_item['snippet']['publishedAt'].replace('Z', '+00:00'))
-    
-    # 取得した動画よりも新しい時期にアップロードされた動画を検索
-    if publishedAt < playlist_publishedAt:
-        video_response = youtube.search().list(
-            part='id',
-            q=' '.join(celebrities),
-            type='video',
-            videoCaption='closedCaption',
-            videoDefinition='high',
-            videoEmbeddable='true',
-            videoType='episode',
-            publishedAfter=playlist_publishedAt.isoformat() + 'Z',
-            order='date'
-        ).execute()
-        
-        if 'items' not in video_response:
-            continue
-        
-        # 韓国語または日本語の字幕がある動画を抽出
-        for item in video_response['items']:
-            video_id = item['id']['videoId']
-            
-            caption_response = youtube.captions().list(
-                part='snippet',
-                videoId=video_id
-            ).execute()
-            
-            if 'items' not in caption_response:
-                continue
-            
-            for caption_item in caption_response['items']:
-                if caption_item['snippet']['language'] in ['ko', 'ja'] and caption_item['snippet']['trackKind'] == 'standard':
-                    newVideoIds.append(video_id)
-                    break
+    addVideos(videoId, playlistId)
+
+print(video_ids)
+print(' '.join(video_ids))
