@@ -3,6 +3,7 @@ import datetime
 import requests
 import pprint
 from requests_oauthlib import OAuth1
+from apiKey import config
 import os
 import json
 from apiclient.discovery import build
@@ -18,7 +19,7 @@ def outputFirestoreJson(video_id):
 
     try:
         # YouTubeのAPIキーを設定する
-        api_key = 'AIzaSyCsm_qh58EORAOD8e00AXYDdlyT4yKRq2Y'
+        api_key = config.YOUTUBE_API_KEY
         # YouTubeのAPIを使用して動画情報を取得する
         youtube = build('youtube', 'v3', developerKey=api_key)
         response = youtube.videos().list(part='snippet', id=video_id).execute()
@@ -135,7 +136,7 @@ def translate(word):
         }       
 
     response = requests.post(url, data=data, auth=OAuth1(api_key, api_secret)).json()
-    pprint.pprint(response)
+    # pprint.pprint(response)
     associate = response['resultset']['result']['text']
     # print(associate)
     return associate
@@ -154,7 +155,7 @@ def download_korean_subtitle(video_id):
     try:
         transcript_list = youtube_transcript_api.YouTubeTranscriptApi.list_transcripts(video_id)
         for transcript in transcript_list:
-            if transcript.language_code == 'ko':
+            if transcript.language_code == 'ko' and not transcript.is_generated:
                 return transcript.fetch()
         return None
     except:
@@ -165,7 +166,7 @@ def download_japanese_subtitle(video_id):
     try:
         transcript_list = youtube_transcript_api.YouTubeTranscriptApi.list_transcripts(video_id)
         for transcript in transcript_list:
-            if transcript.language_code == 'ja':
+            if transcript.language_code == 'ja' and not transcript.is_generated:
                 return transcript.fetch()
         return None
     except:

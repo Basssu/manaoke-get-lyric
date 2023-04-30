@@ -3,11 +3,12 @@ from firebase_admin import credentials, firestore
 import google.auth
 from googleapiclient.discovery import build
 import datetime
+from apiKey import config
 from googleapiclient.errors import HttpError
 
 flavor = "prod"
 video_ids = []
-DEVELOPER_KEY = "AIzaSyCsm_qh58EORAOD8e00AXYDdlyT4yKRq2Y"
+DEVELOPER_KEY = config.YOUTUBE_API_KEY
 
 def addVideos(latestVideoIdInFirestore, playlist_id):
     try:
