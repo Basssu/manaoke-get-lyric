@@ -12,10 +12,11 @@ from apiclient.discovery import build
 
 def outputFirestoreJson(video_id):
     #ここのパラメーターを決める
-    celebrityIds = [] #いちいち決める場合は[]
-    isTitleSame = False
-    category = "music" #いちいち決める場合はNone。それ以外はmusicかvideoを選択
-    playlistIds = [] #いちいち決める場合は[]
+    celebrityIds = ["Fo8eXPfWE8rmD9Rj0bVR"] #いちいち決める場合は[]
+    isTitleSame = True
+    category = "video" #いちいち決める場合はNone。それ以外はmusicかvideoを選択
+    playlistIds = ["PLfO7cKwA7IXU67HNAlyypMvHOOq_7-ShL"] #いちいち決める場合は[]
+    lastCheck = True
 
     try:
         # YouTubeのAPIキーを設定する
@@ -94,7 +95,7 @@ def outputFirestoreJson(video_id):
             #     if isPremiumYN == "n":
             #         isPremium = False
             #         break
-        
+
             print("これでよろしいですか？(y/n)")
             pprint.pprint({
                 "title": title,
@@ -103,7 +104,12 @@ def outputFirestoreJson(video_id):
                 "isPremium": isPremium,
                 "category": category
             })
-            isGood = input()
+            isGood = ''
+            if not lastCheck:
+                isGood = 'y'
+            else:
+                isGood = input()
+            
             if isGood == "y":
                 firestoreData["title"] = title
                 firestoreData["celebrityIds"] = celebrityIds

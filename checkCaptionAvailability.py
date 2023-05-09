@@ -6,7 +6,7 @@ import youtube_transcript_api
 
 # YouTube Data APIのAPIキーを設定
 API_KEY = config.YOUTUBE_API_KEY  # 自分のAPIキーに置き換える
-PLAYLIST_ID = 'PLC351FEFA5FF7D16A'  # 取得したい再生リストのIDに置き換える
+PLAYLIST_ID = 'PL2NKTOu-b3XG25ZS2_ni7k_-enzZ9L-H6'  # 取得したい再生リストのIDに置き換える
 
 def get_video_ids_with_subtitles(api_key, playlist_id):
     youtube = build('youtube', 'v3', developerKey=api_key)

@@ -39,6 +39,18 @@ documentId = f'{translatedFrom}_{translatedTo}_{video_id}'
 
 firebase_admin.initialize_app(cred,{'storageBucket': f'gs://{domain}'})
 
+a = open(f'videos/{video_id}/allData.json', 'r')
+data = a.read()
+a.close()
+
+# with open(f'videos/{video_id}/allData.json', 'r') as f:
+#     all_json_data = json.load(f)
+
+# alldDataDict = dict(all_json_data)
+if data == '[]':
+    print("配列が空のため中断します")
+    sys.exit()
+
 path = f'videos/{video_id}/'
 filename = f'videos/{documentId}/allData.json'
 bucket = storage.bucket(domain)

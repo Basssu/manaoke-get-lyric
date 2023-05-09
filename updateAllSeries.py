@@ -5,6 +5,8 @@ from googleapiclient.discovery import build
 import datetime
 from apiKey import config
 from googleapiclient.errors import HttpError
+import youtube_transcript_api
+
 
 flavor = "prod"
 video_ids = []
@@ -14,44 +16,61 @@ def addVideos(latestVideoIdInFirestore, playlist_id):
     try:
         next_page_token = None
         playlist_items = []
-        for i in range(50):
-            playlist_items_response = youtube.playlistItems().list(
+
+        response = youtube.playlistItems().list(
                 part="snippet",
                 playlistId=playlist_id,
                 maxResults=1,
-                pageToken=next_page_token
                 ).execute()
-            if playlist_items_response["items"][0]["snippet"]["resourceId"]["videoId"] == latestVideoIdInFirestore:
-                break
-            playlist_items.append(playlist_items_response["items"][0])
-            next_page_token = playlist_items_response.get('nextPageToken')
-            
+        
+        if datetime.datetime.fromisoformat(response["items"][0]["snippet"]['publishedAt'].replace('Z', '+00:00')) < publishedAt: # 新しい動画が先にこない場合は全て取得する
+            while 1: 
+                playlist_items_response = youtube.playlistItems().list(
+                    part="snippet",
+                    playlistId=playlist_id,
+                    maxResults=50,
+                    pageToken=next_page_token
+                    ).execute()
+                playlist_items.append(playlist_items_response["items"][0])
+                next_page_token = playlist_items_response.get('nextPageToken')
+                if not next_page_token:
+                    break
+        else: #　新しい動画が最初に来る場合は、最初の方から動画を取得していく
+            for i in range(50):
+                playlist_items_response = youtube.playlistItems().list(
+                    part="snippet",
+                    playlistId=playlist_id,
+                    maxResults=1,
+                    pageToken=next_page_token
+                    ).execute()
+                if playlist_items_response["items"][0]["snippet"]["resourceId"]["videoId"] == latestVideoIdInFirestore:
+                    break
+                playlist_items.append(playlist_items_response["items"][0])
+                next_page_token = playlist_items_response.get('nextPageToken')
         
         for playlist_item in playlist_items:
             video_id = playlist_item["snippet"]["resourceId"]["videoId"]
             video_published_at = datetime.datetime.fromisoformat(playlist_item['snippet']['publishedAt'].replace('Z', '+00:00'))
             # 指定した動画よりも新しい投稿日時の動画IDを取得する
             if latestVideoIdInFirestore == video_id:
-                break
+                continue
             if video_published_at < publishedAt:
                 continue
-            captions = youtube.captions().list(
-                part='snippet',
-                videoId=video_id
-                ).execute()
-            languageCount = 0
-            for caption in captions['items']:
-                if caption['snippet']['language'] == 'ja' and caption['snippet']['trackKind'] == 'standard':
-                    languageCount = languageCount + 1
-                    break
-                
-            for caption in captions['items']:
-                if caption['snippet']['language'] == 'ko' and caption['snippet']['trackKind'] == 'standard':
-                    languageCount = languageCount + 1
-                    break
-                
-            if languageCount == 2:
-                video_ids.append(video_id)
+            try:
+                transcript_list = youtube_transcript_api.YouTubeTranscriptApi.list_transcripts(video_id)
+                languageCount1 = 0
+                for transcript in transcript_list:
+                    if transcript.language_code == 'ko' and not transcript.is_generated:
+                        languageCount1 = languageCount1 + 1
+                        break
+                for transcript in transcript_list:
+                    if transcript.language_code == 'ja' and not transcript.is_generated:
+                        languageCount1 = languageCount1 + 1
+                        break
+                if languageCount1 == 2:
+                    video_ids.append(video_id)
+            except:
+                print('error')
 
     except HttpError as e:
         print("An HTTP error occurred: %s" % e)
@@ -83,6 +102,8 @@ series_docs = series_ref.get()
 for doc in series_docs:
     # playlistIdとcelebritiesの取得
     playlistId = doc.get('playlistId')
+    if playlistId == None:
+        continue
     
     # playlistIdが含まれるvideoドキュメントのうち、publishedAtが最新のものを取得
     videos_ref = db.collection('videos')
