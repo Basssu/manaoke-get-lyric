@@ -98,12 +98,21 @@ newVideoIds = []
 series_ref = db.collection('series')
 series_docs = series_ref.get()
 
+doc_count = 0
 # 各ドキュメントに対して処理を実行
 for doc in series_docs:
+    doc_count = doc_count + 1
+    print(doc_count)
     # playlistIdとcelebritiesの取得
-    playlistId = doc.get('playlistId')
+    playlistId = None
+    try:
+        playlistId = doc.get('playlistId')
+    except Exception as e:
+        print('e自身:' + str(e))
+        continue
     if playlistId == None:
         continue
+    print(playlistId)
     
     # playlistIdが含まれるvideoドキュメントのうち、publishedAtが最新のものを取得
     videos_ref = db.collection('videos')

@@ -12,10 +12,10 @@ from apiclient.discovery import build
 
 def outputFirestoreJson(video_id):
     #ここのパラメーターを決める
-    celebrityIds = ["Fo8eXPfWE8rmD9Rj0bVR"] #いちいち決める場合は[]
+    celebrityIds = [] #いちいち決める場合は[]
     isTitleSame = True
     category = "video" #いちいち決める場合はNone。それ以外はmusicかvideoを選択
-    playlistIds = ["PLfO7cKwA7IXU67HNAlyypMvHOOq_7-ShL"] #いちいち決める場合は[]
+    playlistIds = [] #いちいち決める場合は[]
     lastCheck = True
 
     try:
@@ -31,6 +31,7 @@ def outputFirestoreJson(video_id):
         publishedAt = response['items'][0]['snippet']['publishedAt']
         channelTitle = response['items'][0]['snippet']['channelTitle'] 
         thumbnailUrl = response['items'][0]['snippet']['thumbnails']['medium']['url']
+        defaultAudioLanguage = response['items'][0]['snippet']['defaultAudioLanguage']
 
         pprint.pprint(response)
 
@@ -39,6 +40,7 @@ def outputFirestoreJson(video_id):
             "celebrityIds": None,
             "channelId": channelId,
             "channelTitle": channelTitle,
+            "defaultAudioLanguage": defaultAudioLanguage,
             "isInvisible": False,
             "jsonUrl": None,
             "playlistIds": None,
