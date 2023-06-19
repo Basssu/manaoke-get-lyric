@@ -7,7 +7,7 @@ import sys
 
 flavor = "prod"
 type = "celebrities" #"series"か"celebrities"が入る
-content_id = "06qYHwYf30kXMDqneCRT" #seriesIdかcelebrityIdが入る
+content_id = "ppVsPEstvVVKgPiM0RT9" #seriesIdかcelebrityIdが入る
 
 if flavor == "prod":
     cred = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
@@ -22,7 +22,8 @@ firebase_admin.initialize_app(cred)
 # Firestoreクライアントの取得
 db = firestore.client()
 
-body = "韓国語の意味を理解しながら推しの動画を見よう！"
+# body = "韓国語の意味を理解しながら推しの動画を見よう！"
+body = "新曲「죽어보자(GET LIT)」を韓国語で歌おう！"
 if type == "series":
     title = "お気に入りシリーズ新着動画"
 else:
@@ -78,14 +79,19 @@ for user_id in liked_by:
 print(len(device_token_list))
 
 for device_token in device_token_list:
-    # 通知メッセージの作成
-    message = messaging.Message(
-        notification=messaging.Notification(
-            title=title,
-            body=body
-        ),
-        token=device_token
-    )
+    try:
+        print('エラーではない')
+        print(device_token)
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body
+            ),
+            token=device_token
+        )
+    except:
+        print('エラー')
+        print(device_token)
 
 # 通知の送信
 response = messaging.send(message)

@@ -13,6 +13,43 @@ from uuid import uuid4
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+import re
+
+tokenList = []
+def loop(selectedText):
+    for i in range(len(selectedText)):
+        token = selectedText[0:i + 1]
+        if token not in tokenList:
+            tokenList.append(token)
+
+def makeTokenList(title):
+    ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
+    tokenList = []
+    titleWithoutKakko = remove_parentheses(title)
+    print(titleWithoutKakko)
+    insideKakko = []
+    if title != titleWithoutKakko and title.count("(") == 1 and title.count(")") == 1:
+        insideKakko = title[title.find("(")+1:title.find(")")]
+        if not any((a in insideKakko) for a in ngList):
+            loop(insideKakko)
+            loop(insideKakko.upper())
+            loop(insideKakko.lower())
+            loop(insideKakko.capitalize())
+
+    loop(titleWithoutKakko)
+    loop(titleWithoutKakko.upper())
+    loop(titleWithoutKakko.lower())
+    loop(titleWithoutKakko.capitalize())
+
+
+def remove_parentheses(string):
+    # 括弧とその中身を含む正規表現パターンを定義する
+    pattern = r'\([^()]*\)'
+
+    # 正規表現パターンに一致する部分を空文字列で置換する
+    result = re.sub(pattern, '', string)
+
+    return result
 
 params = sys.argv[1:]
 video_id = params[0]
@@ -70,6 +107,9 @@ with open(f'videos/{video_id}/firestore.json', 'w') as f:
 
 firestoreDict["publishedAt"] = publishedAtDatetime
 firestoreDict["updatedAt"] = datetime.datetime.now()
+if firestoreDict["category"] == "music":
+    makeTokenList(firestoreDict["title"])
+    firestoreDict["tokenList"] = tokenList
 db= firestore.client()
 doc_ref = db.collection('videos').document(documentId)
 

@@ -3,9 +3,25 @@ from firebase_admin import credentials, firestore
 from googleapiclient.discovery import build
 from apiKey import config
 from googleapiclient.errors import HttpError
+import re
 
+def loop(selectedText):
+    
+    for i in range(len(selectedText)):
+        token = selectedText[0:i + 1]
+        if token not in tokenList:
+            tokenList.append(token)
 
-flavor = "prod"
+def remove_parentheses(string):
+    # 括弧とその中身を含む正規表現パターンを定義する
+    pattern = r'\([^()]*\)'
+
+    # 正規表現パターンに一致する部分を空文字列で置換する
+    result = re.sub(pattern, '', string)
+
+    return result
+
+flavor = "stg"
 video_ids = []
 DEVELOPER_KEY = config.YOUTUBE_API_KEY
 
@@ -29,28 +45,42 @@ newVideoIds = []
 
 # seriesコレクションのドキュメントを取得
 videos_ref = db.collection('videos')
-videos_docs = videos_ref.get()
+videos_docs = videos_ref.where('category', '==', 'music').get()
+
+ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
 
 count = 0
 # 各ドキュメントに対して処理を実行
 for doc in videos_docs:
     print(count)
     # playlistIdとcelebritiesの取得
-    videoId = doc.get('videoId')
-    if videoId == None:
+    title = doc.get('title')
+    category = doc.get('category')
+    if category != "music":
         continue
+
+    tokenList = []
+    titleWithoutKakko = remove_parentheses(title)
+    print(titleWithoutKakko)
+    insideKakko = []
+    if title != titleWithoutKakko and title.count("(") == 1 and title.count(")") == 1:
+        insideKakko = title[title.find("(")+1:title.find(")")]
+        if not any((a in insideKakko) for a in ngList):
+            loop(insideKakko)
+            loop(insideKakko.upper())
+            loop(insideKakko.lower())
+            loop(insideKakko.capitalize())
+
+    loop(titleWithoutKakko)
+    loop(titleWithoutKakko.upper())
+    loop(titleWithoutKakko.lower())
+    loop(titleWithoutKakko.capitalize())
     
-    # videos.listメソッドの実行
-    videos_response = youtube.videos().list(
-        part='snippet',
-        id=videoId
-    ).execute()
 
     try:
-        # 動画のデフォルトオーディオ言語を取得
-        default_audio_language = videos_response['items'][0]['snippet']['defaultAudioLanguage']
         doc_ref = db.collection('videos').document(doc.id)
-        doc_ref.update({'defaultAudioLanguage': default_audio_language})
+        doc_ref.update({'tokenList': tokenList})
+        print('done')
     except Exception as e:
         print('=== エラー内容 ===')
         print('type:' + str(type(e)))
