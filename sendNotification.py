@@ -23,7 +23,7 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # body = "韓国語の意味を理解しながら推しの動画を見よう！"
-body = "新曲「죽어보자(GET LIT)」を韓国語で歌おう！"
+body = "新曲「TOPLINE (Feat. Tiger JK)」を韓国語で歌おう！"
 if type == "series":
     title = "お気に入りシリーズ新着動画"
 else:
@@ -80,8 +80,6 @@ print(len(device_token_list))
 
 for device_token in device_token_list:
     try:
-        print('エラーではない')
-        print(device_token)
         message = messaging.Message(
             notification=messaging.Notification(
                 title=title,
@@ -89,6 +87,8 @@ for device_token in device_token_list:
             ),
             token=device_token
         )
+        print('エラーではない')
+        print(device_token)
     except:
         print('エラー')
         print(device_token)
