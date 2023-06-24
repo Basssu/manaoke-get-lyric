@@ -1,8 +1,12 @@
+import os
+import sys
+sys.path.append(os.pardir)
 from apiKey import config
 from googleapiclient.discovery import build
 import ConvenientFunctions as cf
 import re
 import datetime
+import pytz
 
 def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool):
     apikey = config.YOUTUBE_API_KEY
@@ -58,7 +62,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "tokenList": makeTokenListFromText(title),
             "translatedFrom": "ko",
             "translatedTo": "ja",
-            "updatedAt": datetime.datetime.now(),
+            "updatedAt": datetime.datetime.now(pytz.timezone('Asia/Tokyo')),
             "videoId": videoId,
             "youtubeTitle": youtubeTitle,
         }

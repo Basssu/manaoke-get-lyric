@@ -51,7 +51,7 @@ def setEachVideo(videoId: str):
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True)
         url = ToStorage.toStorage(videoId, flavor, srtData, True)
     
-    if 'ja' in availableLanguages and 'ka' in availableLanguages: # 日本語・韓国語字幕がある場合
+    if 'ja' in availableLanguages and 'ko' in availableLanguages: # 日本語・韓国語字幕がある場合
         print(f"{videoId}: この動画には日本語・韓国語字幕があるため、続行します")
         koreanCaptions = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(
             videoId, 

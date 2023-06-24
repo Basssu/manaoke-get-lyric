@@ -7,10 +7,10 @@ from uuid import uuid4
 
 def toStorage(videoId: str, flavor: str, data: str, isUncompletedVideo: bool) -> str:
     if flavor == "prod":
-        cred = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
+        cred = credentials.Certificate("../firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
         domain = "manaoke-8c082.appspot.com"
     else:
-        cred = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
+        cred = credentials.Certificate("../firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
         domain = "manaoke-stg.appspot.com"
 
     documentId = f'ko_ja_{videoId}'
