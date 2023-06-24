@@ -1,0 +1,96 @@
+from apiKey import config
+from googleapiclient.discovery import build
+import ConvenientFunctions as cf
+import re
+import datetime
+
+def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool):
+    apikey = config.YOUTUBE_API_KEY
+    youtube = build('youtube', 'v3', developerKey=apikey)
+    response = youtube.videos().list(part='snippet', id=videoId).execute()
+
+    youtubeTitle: str = response['items'][0]['snippet']['title']
+    title = youtubeTitle
+    channelId = response['items'][0]['snippet']['channelId']
+    publishedAt = response['items'][0]['snippet']['publishedAt']
+    channelTitle = response['items'][0]['snippet']['channelTitle'] 
+    thumbnailUrl = response['items'][0]['snippet']['thumbnails']['medium']['url']
+    defaultAudioLanguage = response['items'][0]['snippet']['defaultAudioLanguage']
+    print(f'videoId: {videoId}')
+    print(f'title: {title}')
+
+    if policy["setIfTitleIsSameAsYoutubeTitleEachTime"]:
+        if not cf.answeredYes('タイトルはYoutubeのタイトルと同じですか？'):
+            title = cf.inputText('タイトルを入力してください。')   
+    else:
+        if not policy["IsTitleSameAsYoutubeTitle"]:
+            title = cf.inputText('タイトルを入力してください。')
+
+    celebrityIds = cf.inputText('celebrityIdsを入力してください。(複数の場合、","で区切ってください)') .split(",")if policy["setCelebrityIdsEachTime"] else policy["celebrityIds"]
+    if celebrityIds == ['']:
+        celebrityIds = []
+    
+    playlistIds = cf.inputText('playlistIdsを入力してください。(複数の場合、","で区切ってください)') .split(",") if policy["setPlaylistIdsEachTime"] else policy["playlistIds"]
+    if playlistIds == ['']: 
+        playlistIds = []
+
+    firestoreData = {
+            "category": 
+            policy['category'] 
+            if not policy['setCategoryEachTime'] 
+            else 'video' 
+            if cf.answeredYes('カテゴリーはどっち？(y = video, n = music)') 
+            else 'music',
+            "celebrityIds": celebrityIds,
+            "channelId": channelId,
+            "channelTitle": channelTitle,
+            "defaultAudioLanguage": defaultAudioLanguage,
+            "isInvisible": False,
+            "isPremium": False,
+            "isUncompletedVideo": isGonneBeUncompletedVideo,
+            "isWaitingForReview": False,
+            # "jsonUrl": None,
+            "playlistIds": playlistIds,
+            "publishedAt": datetime.datetime.strptime(publishedAt, "%Y-%m-%dT%H:%M:%SZ"),
+            "publishedIn": int(publishedAt.split("-")[0]),
+            "thumbnailUrl": thumbnailUrl,
+            "title": title,
+            "tokenList": makeTokenListFromText(title),
+            "translatedFrom": "ko",
+            "translatedTo": "ja",
+            "updatedAt": datetime.datetime.now(),
+            "videoId": videoId,
+            "youtubeTitle": youtubeTitle,
+        }
+
+    return firestoreData
+
+def makeTokenListFromText(text: str) -> list[str]:
+    tokenList = []
+    ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
+    textWithoutKakko = removeKakko(text)
+    if text != textWithoutKakko and text.count("(") == 1 and text.count(")") == 1:
+        insideKakko = text[text.find("(")+1:text.find(")")]
+        if not any((a in insideKakko) for a in ngList):
+            tokenList = makeTokenListFromEachLetterCaseOfText(insideKakko)
+
+    tokenList = list(set(makeTokenListFromEachLetterCaseOfText(textWithoutKakko) + tokenList)) #重複を削除
+    return sorted(tokenList)
+
+def makeTokenListFromEachLetterCaseOfText(text: str) -> list[str]:
+    resultList = []
+    for letterSize in [text, text.upper(), text.lower(), text.capitalize()]:
+        resultList = list(set(makeNGram(letterSize) + resultList)) #重複を削除
+    return resultList
+
+def makeNGram(text: str) -> list[str]:
+    resultList = []
+    for i in range(len(text)):
+        token = text[0:i + 1]
+        resultList.append(token)
+    return list(set(resultList)) #重複を削除
+
+def removeKakko(text: str) -> str: #括弧とその中身を削除して出力
+    pattern = r'\([^()]*\)'
+    result = re.sub(pattern, '', text)
+    return result

@@ -87,7 +87,7 @@ with open(f'videos/{video_id}/subtitle_all.txt', 'r', encoding='utf-8') as f:
                         words.append(analysisList[k])
                 # print("a:", lyrics_list[j])
                 # print("b:", words)
-                detail.append({'actualLyric': lyrics_list[j], 'analysis': words, 'ruby': ruby_list[j]})
+                detail.append({'actualLyric': lyrics_list[j], 'analysis': words})
             # detail = [{'actualLyric': lyric, 'analysis': analysis(lyric), 'ruby': ruby} for lyric, ruby in zip(lyrics_list, ruby_list)]
             lyrics.append({'time': time, 'fullMeaning': full_meaning, 'detail': detail})
         except IndexError:
