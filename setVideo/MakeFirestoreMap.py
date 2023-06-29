@@ -8,10 +8,10 @@ import re
 import datetime
 import pytz
 
-def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool):
+def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool, availableCaptionLanguages: list[str]):
     apikey = config.YOUTUBE_API_KEY
     youtube = build('youtube', 'v3', developerKey=apikey)
-    response = youtube.videos().list(part='snippet', id=videoId).execute()
+    response = youtube.videos().list(part='snippet,contentDetails', id=videoId).execute()
 
     youtubeTitle: str = response['items'][0]['snippet']['title']
     title = youtubeTitle
@@ -20,6 +20,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
     channelTitle = response['items'][0]['snippet']['channelTitle'] 
     thumbnailUrl = response['items'][0]['snippet']['thumbnails']['medium']['url']
     defaultAudioLanguage = response['items'][0]['snippet']['defaultAudioLanguage']
+    durationInMilliseconds = youtubeDurationToInMilliseconds(response['items'][0]['contentDetails']['duration'])
     print(f'videoId: {videoId}')
     print(f'title: {title}')
 
@@ -39,6 +40,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
         playlistIds = []
 
     firestoreData = {
+            "availableCaptionLanguages": availableCaptionLanguages,
             "category": 
             policy['category'] 
             if not policy['setCategoryEachTime'] 
@@ -49,6 +51,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "channelId": channelId,
             "channelTitle": channelTitle,
             "defaultAudioLanguage": defaultAudioLanguage,
+            "durationInMilliseconds": durationInMilliseconds,
             "isInvisible": False,
             "isPremium": False,
             "isUncompletedVideo": isGonneBeUncompletedVideo,
@@ -98,3 +101,20 @@ def removeKakko(text: str) -> str: #括弧とその中身を削除して出力
     pattern = r'\([^()]*\)'
     result = re.sub(pattern, '', text)
     return result
+
+def youtubeDurationToInMilliseconds(durationStr: str) -> int:
+    # 時間の部分（PT1H30M）と秒の部分（PT30S）に分割します
+    time_part = durationStr.replace('PT', '').replace('H', 'H ').replace('M', 'M ').replace('S', 'S')
+    time_parts = time_part.split()
+    minutes = 0
+    seconds = 0
+    for part in time_parts:
+        if part.endswith('H'):
+            hours = int(part[:-1])
+            minutes += hours * 60
+        elif part.endswith('M'):
+            minutes += int(part[:-1])
+        elif part.endswith('S'):
+            seconds += int(part[:-1])
+
+    return (minutes * 60 + seconds) * 1000

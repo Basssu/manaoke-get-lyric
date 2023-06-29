@@ -13,8 +13,8 @@ from googleapiclient.discovery import build
 def outputFirestoreJson(video_id):
     #ここのパラメーターを決める
     celebrityIds = [] #いちいち決める場合は[]
-    isTitleSame = False
-    category = "music" #いちいち決める場合はNone。それ以外はmusicかvideoを選択
+    isTitleSame = True
+    category = "video" #いちいち決める場合はNone。それ以外はmusicかvideoを選択
     playlistIds = [] #いちいち決める場合は[]
     lastCheck = True
 

@@ -48,7 +48,7 @@ def setEachVideo(videoId: str):
             languages=['ja'],
             )
         srtData = convertCaptionsToSrt(japaneseCaptions)
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
         url = ToStorage.toStorage(videoId, flavor, srtData, True)
     
     if 'ja' in availableLanguages and 'ko' in availableLanguages: # 日本語・韓国語字幕がある場合
@@ -71,7 +71,7 @@ def setEachVideo(videoId: str):
             print(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しないため、スキップします。')
             skippedVideoIdsAndReasons.append(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しない')
             return
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
         url = ToStorage.toStorage(videoId, flavor, jsonData, False)
     
     document = ToFireStore.toFirestore(firestoreMap, url, flavor)
