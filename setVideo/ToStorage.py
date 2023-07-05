@@ -4,22 +4,25 @@ from firebase_admin import storage
 import os
 import json
 from uuid import uuid4
+import ConvenientFunctions as cf
 
 unvompletedVideosDir = 'uncompletedVideos'
 videosDir = 'videos'
 uncompletedVideosJsonFileName = 'caption.json'
 videosJsonFileName = 'allData.json'
 
-def toStorage(videoId: str, flavor: str, data: str, availableCaptionLanguages: list[str]) -> str:
-    if flavor == "prod":
-        cred = credentials.Certificate("../firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
-        domain = "manaoke-8c082.appspot.com"
-    else:
-        cred = credentials.Certificate("../firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
-        domain = "manaoke-stg.appspot.com"
-
-    documentId = f'ko_ja_{videoId}'
-    firebase_admin.initialize_app(cred,{'storageBucket': f'gs://{domain}'})
+def toStorage(
+          documentId: str, 
+          flavor: str, 
+          data: str, 
+          availableCaptionLanguages: list[str],
+          domain = None,
+          firebaseAlreadyInitialized: bool = False,
+          ) -> str:
+    if not firebaseAlreadyInitialized:
+        cred = cf.firebaseCreds(flavor)
+        domain = cf.firebaseDomain(flavor)
+        firebase_admin.initialize_app(cred,{'storageBucket': f'gs://{domain}'})
     if availableCaptionLanguages == ['ja']: #srtファイルのパスを格納
         dirName = unvompletedVideosDir
         fileName = uncompletedVideosJsonFileName

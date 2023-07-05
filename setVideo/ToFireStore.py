@@ -2,12 +2,19 @@ from firebase_admin import firestore
 from firebase_admin import credentials
 import firebase_admin
 
-def toFirestore(firestoreDict: dict, storageUrl: str, flavor: str):
-    if flavor == "prod":
-        creds = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
-    else:
-        creds = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
-    firebase_admin.initialize_app(creds)
+def toFirestore(
+        firestoreDict: dict, 
+        storageUrl: str, 
+        flavor: str, 
+        documentId: str,
+        firebaseAlreadyInitialized: bool = False
+        ):
+    if not firebaseAlreadyInitialized:
+        if flavor == "prod":
+            creds = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
+        else:
+            creds = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
+        firebase_admin.initialize_app(creds)
     db = firestore.client()
     availableCaptionLanguages = firestoreDict["availableCaptionLanguages"]
     if availableCaptionLanguages == ['ja']:
@@ -17,7 +24,7 @@ def toFirestore(firestoreDict: dict, storageUrl: str, flavor: str):
     elif 'ja' in availableCaptionLanguages and 'ko' in availableCaptionLanguages:
         firestoreDict["jsonUrl"] = storageUrl
         
-    doc_ref = db.collection('videos').document(f'ko_ja_{firestoreDict["videoId"]}')
+    doc_ref = db.collection('videos').document(documentId)
     # ドキュメントの存在を確認
     doc = doc_ref.get()
     if doc.exists:

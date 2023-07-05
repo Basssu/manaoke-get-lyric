@@ -1,4 +1,5 @@
 import datetime
+from firebase_admin import credentials
 
 def formatTime(time: float) -> str:
     return (datetime.timedelta(seconds=time) + datetime.datetime(1900,1,1)).strftime('%H:%M:%S,%f')[:-3]
@@ -18,3 +19,15 @@ def inputText(question: str) -> str:
     print(question)
     text = input()
     return text
+
+def firebaseCreds(flavor: str):
+    if flavor == "prod":
+        return credentials.Certificate("../firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
+    else:
+        return credentials.Certificate("../firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
+
+def firebaseDomain(flavor: str):
+    if flavor == "prod":
+        return "manaoke-8c082.appspot.com"
+    else:
+        return "manaoke-stg.appspot.com"
