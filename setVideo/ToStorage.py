@@ -5,7 +5,12 @@ import os
 import json
 from uuid import uuid4
 
-def toStorage(videoId: str, flavor: str, data: str, isUncompletedVideo: bool) -> str:
+unvompletedVideosDir = 'uncompletedVideos'
+videosDir = 'videos'
+uncompletedVideosJsonFileName = 'caption.json'
+videosJsonFileName = 'allData.json'
+
+def toStorage(videoId: str, flavor: str, data: str, availableCaptionLanguages: list[str]) -> str:
     if flavor == "prod":
         cred = credentials.Certificate("../firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
         domain = "manaoke-8c082.appspot.com"
@@ -15,36 +20,41 @@ def toStorage(videoId: str, flavor: str, data: str, isUncompletedVideo: bool) ->
 
     documentId = f'ko_ja_{videoId}'
     firebase_admin.initialize_app(cred,{'storageBucket': f'gs://{domain}'})
-    if isUncompletedVideo: #srtファイルのパスを格納
-        filename = srtFilePath(documentId, data)
-    else: #jsonファイルのパスを格納
-        filename = jsonFilePath(documentId, data)
+    if availableCaptionLanguages == ['ja']: #srtファイルのパスを格納
+        dirName = unvompletedVideosDir
+        fileName = uncompletedVideosJsonFileName
+        filePath = uncompletedJsonFilePath(documentId, data)
+    elif 'ja' in availableCaptionLanguages and 'ko' in availableCaptionLanguages: #jsonファイルのパスを格納
+        dirName = videosDir
+        fileName = videosJsonFileName
+        filePath = jsonFilePath(documentId, data)
 
     bucket = storage.bucket(domain)
-    blob = bucket.blob(filename)
+    blob = bucket.blob(filePath)
     token = uuid4()
     blob.metadata = {"firebaseStorageDownloadTokens": token}
-    blob.upload_from_filename(filename) #ローカルファイルとFirebase storage, どっちも同じパスにしてます。ローカルはどうせ消すので。
-    url = f'https://firebasestorage.googleapis.com/v0/b/{domain}/o/videos%2F{documentId}%2FallData.json?alt=media&token={token}'
-    os.remove(filename)
+    blob.upload_from_filename(filePath) #ローカルファイルとFirebase storage, どっちも同じパスにしてます。ローカルはどうせ消すので。
+    url = f'https://firebasestorage.googleapis.com/v0/b/{domain}/o/{dirName}%2F{documentId}%2F{fileName}?alt=media&token={token}'
+    os.remove(filePath)
     return url
 
-def srtFilePath(documentId: str, srtData: str) -> str:
-    dir = f'uncompletedVideos/{documentId}/'
+def uncompletedJsonFilePath(documentId: str, jsonData: str) -> str:
+    dir = f'{unvompletedVideosDir}/{documentId}/'
     makeDirectory(dir)
-    filename = f'{dir}caption.srt'
-    with open(filename, 'w', encoding='utf-8') as f:
-            f.write(srtData)
-    return filename
+    filePath = f'{dir}{uncompletedVideosJsonFileName}'
+    jsonData = json.dumps(jsonData, indent=4, ensure_ascii=False)
+    with open(filePath, 'w', encoding='utf-8') as f:
+            f.write(jsonData)
+    return filePath
 
 def jsonFilePath(documentId: str, data: str) -> str:
-    dir = f'videos/{documentId}/'
+    dir = f'{videosDir}/{documentId}/'
     makeDirectory(dir)
-    filename = f'{dir}allData.json'
+    filePath = f'{dir}{videosJsonFileName}'
     jsonData = json.dumps(data, indent=4, ensure_ascii=False)
-    with open(filename, 'w', encoding='utf-8') as f:
+    with open(filePath, 'w', encoding='utf-8') as f:
             f.write(jsonData)
-    return filename
+    return filePath
 
 def makeDirectory(dir: str) -> None:
     if not os.path.exists(dir):

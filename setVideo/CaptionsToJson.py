@@ -3,14 +3,14 @@ import mecab_ko_dic
 from konlpy.tag import Okt
 from konlpy.utils import pprint
 import ConvenientFunctions as cf
+from typing import Optional
 
-
-def captionsToJson(koreanCaptions: list[str, dict], japaneseCaptions: list[str, dict]) -> list[dict]:
+def captionsToJson(koreanCaptions: list[str, dict], japaneseCaptions: Optional[list[str, dict]]) -> list[dict]:
     jsonData = []
     for i in range(len(koreanCaptions)):
         jsonData.append({
             "time": convertTimeToSrtFormat(koreanCaptions[i]['start'],koreanCaptions[i]['duration']),
-            "fullMeaning": japaneseCaptions[i]['text'],
+            "fullMeaning": japaneseCaptions[i]['text'] if japaneseCaptions != None else None,
             "detail": makeDetailList(koreanCaptions[i]['text'])
         })
     return jsonData

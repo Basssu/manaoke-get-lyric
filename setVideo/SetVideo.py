@@ -5,6 +5,7 @@ import MakeFirestoreMap
 import ToStorage
 import ToFireStore
 import pprint
+from typing import Optional
 
 # ビデオIDを入力する
 def inputVideoIds() -> list[str]:
@@ -32,27 +33,32 @@ def checkCaptionAvailability(videoId: str) -> list[str]:
 def setEachVideo(videoId: str):
     availableLanguages = checkCaptionAvailability(videoId)
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
-        print(f"{videoId}: この動画には日本語・韓国語字幕がないため、スキップします")
-        skippedVideoIdsAndReasons.append(f'{videoId}:日本語・韓国語字幕がありません')
-        return
+        print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
+        url = None
     
     if availableLanguages == ['ko']: # 日本語字幕がない場合
-        print(f"{videoId}: この動画には韓国語字幕しかないため、スキップします")
-        skippedVideoIdsAndReasons.append(f'{videoId}: 韓国語字幕しかありません')
-        return
+        print(f"{videoId}: この動画には韓国語字幕があります")
+        koreanCaptions = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(
+            videoId, 
+            languages=['ko'],
+            )
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
+        jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
+        url = ToStorage.toStorage(videoId, flavor, jsonData, availableLanguages)
     
     if availableLanguages == ['ja']: # 韓国語字幕がない場合
-        print(f"{videoId}: この動画には日本語字幕があるため、続行します")
+        print(f"{videoId}: この動画には日本語字幕があります")
         japaneseCaptions = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(
             videoId, 
             languages=['ja'],
             )
-        srtData = convertCaptionsToSrt(japaneseCaptions)
+        uncompletedJsonData = convertCaptionsToUncompletedJson(None, japaneseCaptions)
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
-        url = ToStorage.toStorage(videoId, flavor, srtData, True)
+        url = ToStorage.toStorage(videoId, flavor, uncompletedJsonData, availableLanguages)
     
     if 'ja' in availableLanguages and 'ko' in availableLanguages: # 日本語・韓国語字幕がある場合
-        print(f"{videoId}: この動画には日本語・韓国語字幕があるため、続行します")
+        print(f"{videoId}: この動画には日本語・韓国語字幕があります")
         koreanCaptions = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(
             videoId, 
             languages=['ko'],
@@ -72,7 +78,7 @@ def setEachVideo(videoId: str):
             skippedVideoIdsAndReasons.append(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しない')
             return
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
-        url = ToStorage.toStorage(videoId, flavor, jsonData, False)
+        url = ToStorage.toStorage(videoId, flavor, jsonData, availableLanguages)
     
     document = ToFireStore.toFirestore(firestoreMap, url, flavor)
     pprint.pprint(document) #Firestoreにアップロードした内容
@@ -86,14 +92,20 @@ def deleteIfOneCaptionNotExist(mainCaptions: list[dict], subCaptions: list[dict]
                 break
     return captions
 
-def convertCaptionsToSrt(captions: list) -> str:
-    srt = ''
-    for i, line in enumerate(captions, start=1):
-        start = line['start']
-        end = start + line['duration']
-        text = line['text']
-        srt += f'{i}\n{cf.formatTime(start)} --> {cf.formatTime(end)}\n{text}\n\n'
-    return srt
+def convertCaptionsToUncompletedJson(koreanCaptions: Optional[list], japaneseCaptions: Optional[list],) -> dict:
+    jsonData = []
+    notOptionalCaptions = koreanCaptions if koreanCaptions != None else japaneseCaptions
+    for i in range(len(notOptionalCaptions)):
+        start = notOptionalCaptions[i]['start']
+        end = start + notOptionalCaptions[i]['duration']
+        thisLineMap = {}
+        thisLineMap["time"] = f'{cf.formatTime(start)} --> {cf.formatTime(end)}'
+        if koreanCaptions != None:
+            thisLineMap["ko"] = koreanCaptions[i]['text']
+        if japaneseCaptions != None:
+            thisLineMap["ja"] = japaneseCaptions[i]['text']
+        jsonData.append(thisLineMap)
+    return jsonData
 
 def setPolicy() -> dict:
     processPolicy = {
