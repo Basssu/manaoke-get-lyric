@@ -34,7 +34,7 @@ def setEachVideo(videoId: str):
     availableLanguages = checkCaptionAvailability(videoId)
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True)
         url = None
     
     if availableLanguages == ['ko']: # 日本語字幕がない場合
@@ -43,7 +43,7 @@ def setEachVideo(videoId: str):
             videoId, 
             languages=['ko'],
             )
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False)
         jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
     
@@ -54,7 +54,7 @@ def setEachVideo(videoId: str):
             languages=['ja'],
             )
         uncompletedJsonData = convertCaptionsToUncompletedJson(None, japaneseCaptions)
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
     
     if 'ja' in availableLanguages and 'ko' in availableLanguages: # 日本語・韓国語字幕がある場合
@@ -77,10 +77,10 @@ def setEachVideo(videoId: str):
             print(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しないため、スキップします。')
             skippedVideoIdsAndReasons.append(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しない')
             return
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
     
-    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', True)
+    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages, True)
     pprint.pprint(document) #Firestoreにアップロードした内容
 
 def deleteIfOneCaptionNotExist(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:

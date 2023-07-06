@@ -8,7 +8,7 @@ import re
 import datetime
 import pytz
 
-def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool, availableCaptionLanguages: list[str]):
+def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool):
     apikey = config.YOUTUBE_API_KEY
     youtube = build('youtube', 'v3', developerKey=apikey)
     response = youtube.videos().list(part='snippet,contentDetails', id=videoId).execute()
@@ -40,7 +40,6 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
         playlistIds = []
 
     firestoreData = {
-            "availableCaptionLanguages": availableCaptionLanguages,
             "category": 
             policy['category'] 
             if not policy['setCategoryEachTime'] 

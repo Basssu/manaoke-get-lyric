@@ -7,6 +7,7 @@ def toFirestore(
         storageUrl: str, 
         flavor: str, 
         documentId: str,
+        availableCaptionLanguages: str,
         firebaseAlreadyInitialized: bool = False
         ):
     if not firebaseAlreadyInitialized:
@@ -16,7 +17,6 @@ def toFirestore(
             creds = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
         firebase_admin.initialize_app(creds)
     db = firestore.client()
-    availableCaptionLanguages = firestoreDict["availableCaptionLanguages"]
     if availableCaptionLanguages == ['ja']:
         firestoreDict["uncompletedJsonUrl"] = storageUrl
     elif availableCaptionLanguages == ['ko']:

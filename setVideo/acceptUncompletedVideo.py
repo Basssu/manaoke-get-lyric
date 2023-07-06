@@ -69,11 +69,11 @@ def setJson(documentId: str, db: firestore.firestore.Client, domain: str, flavor
             'isUncompletedVideo': False,
             'isWaitingForReview': False,
             'jsonUrl': url,
-            'availableCaptionLanguages': ['ko', 'ja'],
         }, 
         storageUrl = url, 
         flavor = flavor, 
         documentId = documentId,
+        availableCaptionLanguages = ['ko', 'ja'],
         firebaseAlreadyInitialized = True
         )
     
