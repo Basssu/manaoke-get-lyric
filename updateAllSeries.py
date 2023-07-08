@@ -8,6 +8,7 @@ from googleapiclient.errors import HttpError
 import youtube_transcript_api
 
 
+
 flavor = "prod"
 video_ids = []
 DEVELOPER_KEY = config.YOUTUBE_API_KEY

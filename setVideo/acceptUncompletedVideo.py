@@ -8,6 +8,7 @@ import ToFireStore
 import urllib.request
 import json
 import pprint
+import Notification
 
 def makeFirebaseClient(flavor: str):
     creds = cf.firebaseCreds(flavor)
@@ -31,11 +32,14 @@ def setJson(documentId: str, db: firestore.firestore.Client, domain: str, flavor
     isUncompletedVideo = doc.get('isUncompletedVideo')
     isWaitingForReview = doc.get('isWaitingForReview')
     uncompletedJsonUrl = doc.get('uncompletedJsonUrl')
-    if isUncompletedVideo != True or isWaitingForReview != True or uncompletedJsonUrl == None:
+    uncompletedJsonUrl = doc.get('uncompletedJsonUrl')
+    captionSubmitterUid = doc.get('captionSubmitterUid')
+    if isUncompletedVideo != True or isWaitingForReview != True or uncompletedJsonUrl == None or captionSubmitterUid == None:
         print('この動画は承認作業ができません')
         print('isUncompletedVideo: ' + str(isUncompletedVideo))
         print('isWaitingForReview: ' + str(isWaitingForReview))
         print('uncompletedJsonUrl: ' + str(uncompletedJsonUrl))
+        print('captionSubmitterUid: ' + str(captionSubmitterUid))
         return
     response = urllib.request.urlopen(uncompletedJsonUrl)
     uncompletedDictList: list[dict] = json.loads(response.read().decode())
@@ -77,6 +81,12 @@ def setJson(documentId: str, db: firestore.firestore.Client, domain: str, flavor
         firebaseAlreadyInitialized = True
         )
     
+    deviceTokens = Notification.uidsToDeviceTokens([captionSubmitterUid], db)
+    Notification.sendNotificationByDeviceToken(
+        deviceTokens = deviceTokens,
+        title = 'あなたが送信した歌詞・字幕の承認が完了しました',
+        body = 'ありがとうございます！これで他のオタクたちもこの動画を楽しめます！',
+    )
     pprint.pprint(document)
     
     

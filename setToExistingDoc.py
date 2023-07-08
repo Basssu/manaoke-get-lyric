@@ -5,9 +5,26 @@ from apiKey import config
 from googleapiclient.errors import HttpError
 import re
 
-flavor = "stg"
+flavor = "prod"
 video_ids = []
 DEVELOPER_KEY = config.YOUTUBE_API_KEY
+
+def youtubeDurationToInMilliseconds(durationStr: str) -> int:
+    # 時間の部分（PT1H30M）と秒の部分（PT30S）に分割します
+    time_part = durationStr.replace('PT', '').replace('H', 'H ').replace('M', 'M ').replace('S', 'S')
+    time_parts = time_part.split()
+    minutes = 0
+    seconds = 0
+    for part in time_parts:
+        if part.endswith('H'):
+            hours = int(part[:-1])
+            minutes += hours * 60
+        elif part.endswith('M'):
+            minutes += int(part[:-1])
+        elif part.endswith('S'):
+            seconds += int(part[:-1])
+
+    return (minutes * 60 + seconds) * 1000
 
 # Firebase Admin SDKの初期化
 if flavor == "prod":
@@ -29,7 +46,8 @@ newVideoIds = []
 
 # seriesコレクションのドキュメントを取得
 videos_ref = db.collection('videos')
-videos_docs = videos_ref.where('category', '==', 'video').get()
+# videos_docs = videos_ref.where('category', '==', 'video').get()
+videos_docs = videos_ref.get()
 
 count = 0
 # 各ドキュメントに対して処理を実行
@@ -37,14 +55,17 @@ for doc in videos_docs:
     print(count)
     # playlistIdとcelebritiesの取得
     try:
-        isUncompletedVideo = doc.get('isUncompletedVideo')
+        videoId = doc.get('videoId')
+        durationInMilliseconds = doc.get('durationInMilliseconds')
     except Exception as e:
-        isUncompletedVideo = None
-    if isUncompletedVideo != None:
+        durationInMilliseconds = None
+    if durationInMilliseconds != None:
         continue
     try:
+        response = youtube.videos().list(part='contentDetails', id=videoId).execute()
+        durationInMilliseconds = youtubeDurationToInMilliseconds(response['items'][0]['contentDetails']['duration'])
         doc_ref = db.collection('videos').document(doc.id)
-        doc_ref.update({'isUncompletedVideo': False})
+        doc_ref.update({'durationInMilliseconds': durationInMilliseconds})
         print('done')
     except Exception as e:
         print('=== エラー内容 ===')
@@ -54,3 +75,5 @@ for doc in videos_docs:
         print('e自身:' + str(e))
 
     count = count + 1
+
+
