@@ -97,6 +97,7 @@ def main():
     domain = firebaseList[2]
     videoIdLoop(db, domain, flavor)
 
-main()
+if __name__ == '__main__':
+    main()
 
 
