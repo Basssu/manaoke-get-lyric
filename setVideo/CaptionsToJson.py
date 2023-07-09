@@ -14,8 +14,8 @@ def captionsToJson(
     for i in range(len(koreanCaptions)):
         jsonData.append({
             "time": koreanCaptions[i]["time"] if hasStrTime else convertTimeToSrtFormat(koreanCaptions[i]['start'],koreanCaptions[i]['duration']),
-            "fullMeaning": japaneseCaptions[i]['text'] if japaneseCaptions != None else None,
-            "detail": makeDetailList(koreanCaptions[i]['text'])
+            "fullMeaning": japaneseCaptions[i]['text'].replace('\n', ' ') if japaneseCaptions != None else None,
+            "detail": makeDetailList(koreanCaptions[i]['text'].replace('\n', ' ')) if koreanCaptions != None else None,
         })
     return jsonData
 

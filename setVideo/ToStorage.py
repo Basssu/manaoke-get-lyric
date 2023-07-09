@@ -13,16 +13,11 @@ videosJsonFileName = 'allData.json'
 
 def toStorage(
           documentId: str, 
-          flavor: str, 
+          flavor: str,
           data: str, 
           availableCaptionLanguages: list[str],
-          domain = None,
-          firebaseAlreadyInitialized: bool = False,
           ) -> str:
-    if not firebaseAlreadyInitialized:
-        cred = cf.firebaseCreds(flavor)
-        domain = cf.firebaseDomain(flavor)
-        firebase_admin.initialize_app(cred,{'storageBucket': f'gs://{domain}'})
+    domain = cf.firebaseDomain(flavor)
     if availableCaptionLanguages == ['ja']: #srtファイルのパスを格納
         dirName = unvompletedVideosDir
         fileName = uncompletedVideosJsonFileName
