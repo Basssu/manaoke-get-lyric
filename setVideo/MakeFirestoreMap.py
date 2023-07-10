@@ -56,7 +56,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "isUncompletedVideo": isGonneBeUncompletedVideo,
             "isWaitingForReview": False,
             # "jsonUrl": None,
-            'originnalCaptionLanguages': [],
+            # 'originnalCaptionLanguages': [],
             "playlistIds": playlistIds,
             "publishedAt": datetime.datetime.strptime(publishedAt, "%Y-%m-%dT%H:%M:%SZ"),
             "publishedIn": int(publishedAt.split("-")[0]),
