@@ -39,7 +39,7 @@ def setEachVideo(videoId: str, firebaseAlreadyInitialized: bool):
     availableLanguages = checkCaptionAvailability(videoId)
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
         if cf.answeredYes('この動画をスキップしますか？'): return
         url = None
     
@@ -49,7 +49,7 @@ def setEachVideo(videoId: str, firebaseAlreadyInitialized: bool):
             videoId, 
             languages=['ko'],
             )
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
         if cf.answeredYes('この動画をスキップしますか？'): return
         jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
@@ -61,7 +61,7 @@ def setEachVideo(videoId: str, firebaseAlreadyInitialized: bool):
             languages=['ja'],
             )
         uncompletedJsonData = convertCaptionsToUncompletedJson(None, japaneseCaptions)
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
         if cf.answeredYes('この動画をスキップしますか？'): return
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
     
@@ -85,7 +85,7 @@ def setEachVideo(videoId: str, firebaseAlreadyInitialized: bool):
             print(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しないため、スキップします。')
             skippedVideoIdsAndReasons.append(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しない')
             return
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
         if cf.answeredYes('この動画をスキップしますか？'): return
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
     

@@ -22,7 +22,7 @@ def toStorage(
         dirName = unvompletedVideosDir
         fileName = uncompletedVideosJsonFileName
         filePath = uncompletedJsonFilePath(documentId, data)
-    elif 'ja' in availableCaptionLanguages and 'ko' in availableCaptionLanguages: #jsonファイルのパスを格納
+    elif ('ja' in availableCaptionLanguages and 'ko' in availableCaptionLanguages) or availableCaptionLanguages == ['ko']: #jsonファイルのパスを格納
         dirName = videosDir
         fileName = videosJsonFileName
         filePath = jsonFilePath(documentId, data)

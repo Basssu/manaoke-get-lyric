@@ -12,11 +12,13 @@ def captionsToJson(
         ) -> list[dict]:
     jsonData = []
     for i in range(len(koreanCaptions)):
-        jsonData.append({
+        map = {
             "time": koreanCaptions[i]["time"] if hasStrTime else convertTimeToSrtFormat(koreanCaptions[i]['start'],koreanCaptions[i]['duration']),
-            "fullMeaning": japaneseCaptions[i]['text'].replace('\n', ' ') if japaneseCaptions != None else None,
             "detail": makeDetailList(koreanCaptions[i]['text'].replace('\n', ' ')) if koreanCaptions != None else None,
-        })
+        }
+        if japaneseCaptions != None:
+            map["fullMeaning"] = japaneseCaptions[i]['text'].replace('\n', ' ')
+        jsonData.append(map)
     return jsonData
 
 def makeDetailList(KoreanCaptionText: str) -> list[list]:

@@ -7,7 +7,7 @@ import sys
 
 flavor = "prod"
 type = "celebrities" #"series"か"celebrities"が入る
-content_id = "FdaCMF2MwsSsz7F7A0sN" #seriesIdかcelebrityIdが入る
+content_id = "WtGRXBmgRj0U3nsn3PnB" #seriesIdかcelebrityIdが入る
 
 if flavor == "prod":
     cred = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
@@ -23,7 +23,7 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # body = "韓国語の意味を理解しながら推しの動画を見よう！"
-body = "新曲「JUICE」を韓国語で歌おう！"
+body = "新曲「Cream Soda」を韓国語で歌おう！"
 if type == "series":
     title = "お気に入りシリーズ新着動画"
 else:

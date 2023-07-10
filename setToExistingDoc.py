@@ -5,7 +5,7 @@ from apiKey import config
 from googleapiclient.errors import HttpError
 import re
 
-flavor = "prod"
+flavor = "stg"
 video_ids = []
 DEVELOPER_KEY = config.YOUTUBE_API_KEY
 
@@ -55,17 +55,17 @@ for doc in videos_docs:
     print(count)
     # playlistIdとcelebritiesの取得
     try:
-        videoId = doc.get('videoId')
-        durationInMilliseconds = doc.get('durationInMilliseconds')
+        uncompletedJsonUrl = doc.get('uncompletedJsonUrl')
     except Exception as e:
-        durationInMilliseconds = None
-    if durationInMilliseconds != None:
-        continue
+        uncompletedJsonUrl = None
+
+    if uncompletedJsonUrl == None:
+        originnalCaptionLanguages = ['ja', 'ko']
+    else:
+        originnalCaptionLanguages = ['ja']
     try:
-        response = youtube.videos().list(part='contentDetails', id=videoId).execute()
-        durationInMilliseconds = youtubeDurationToInMilliseconds(response['items'][0]['contentDetails']['duration'])
         doc_ref = db.collection('videos').document(doc.id)
-        doc_ref.update({'durationInMilliseconds': durationInMilliseconds})
+        doc_ref.update({'originnalCaptionLanguages': originnalCaptionLanguages})
         print('done')
     except Exception as e:
         print('=== エラー内容 ===')

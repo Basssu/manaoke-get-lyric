@@ -8,7 +8,7 @@ import re
 import datetime
 import pytz
 
-def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool):
+def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool, captionLanguages: list[str]):
     apikey = config.YOUTUBE_API_KEY
     youtube = build('youtube', 'v3', developerKey=apikey)
     response = youtube.videos().list(part='snippet,contentDetails', id=videoId).execute()
@@ -56,6 +56,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "isUncompletedVideo": isGonneBeUncompletedVideo,
             "isWaitingForReview": False,
             # "jsonUrl": None,
+            'originnalCaptionLanguages': [],
             "playlistIds": playlistIds,
             "publishedAt": datetime.datetime.strptime(publishedAt, "%Y-%m-%dT%H:%M:%SZ"),
             "publishedIn": int(publishedAt.split("-")[0]),
