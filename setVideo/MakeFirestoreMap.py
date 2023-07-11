@@ -75,7 +75,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
 def makeTokenListFromText(text: str) -> list[str]:
     tokenList = []
     ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
-    textWithoutKakko = removeKakko(text)
+    textWithoutKakko = removeBrackets(text, '()')
     if text != textWithoutKakko and text.count("(") == 1 and text.count(")") == 1:
         insideKakko = text[text.find("(")+1:text.find(")")]
         if not any((a in insideKakko) for a in ngList):
@@ -97,8 +97,8 @@ def makeNGram(text: str) -> list[str]:
         resultList.append(token)
     return list(set(resultList)) #重複を削除
 
-def removeKakko(text: str) -> str: #括弧とその中身を削除して出力
-    pattern = r'\([^()]*\)'
+def removeBrackets(text: str, brackets: str) -> str:
+    pattern = re.escape(brackets[0]) + r'[^\[{}\]()]*' + re.escape(brackets[1])
     result = re.sub(pattern, '', text)
     return result
 
