@@ -26,7 +26,10 @@ def videoIdsLoop(videoIds: list[str]):
             break
 
 def checkCaptionAvailability(videoId: str) -> list[str]:
-    captionList = youtube_transcript_api.YouTubeTranscriptApi.list_transcripts(videoId)
+    try:
+        captionList = youtube_transcript_api.YouTubeTranscriptApi.list_transcripts(videoId)
+    except youtube_transcript_api._errors.TranscriptsDisabled:
+        captionList = []
     availableLanguages = []
     for caption in captionList:
         if caption.language_code == 'ko' and not caption.is_generated:

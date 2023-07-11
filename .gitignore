@@ -2,3 +2,4 @@ videos/
 firebaseKey/
 apiKey/
 uncompletedVideos/
+__pycache__/
