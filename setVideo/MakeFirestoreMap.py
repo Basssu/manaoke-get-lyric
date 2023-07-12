@@ -62,13 +62,14 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "publishedIn": int(publishedAt.split("-")[0]),
             "thumbnailUrl": thumbnailUrl,
             "title": title,
-            "tokenList": makeTokenListFromText(title),
             "translatedFrom": "ko",
             "translatedTo": "ja",
             "updatedAt": datetime.datetime.now(pytz.timezone('Asia/Tokyo')),
             "videoId": videoId,
             "youtubeTitle": youtubeTitle,
         }
+    if firestoreData['category'] == 'music':
+        firestoreData["tokenList"] = makeTokenListFromText(title)
 
     return firestoreData
 
