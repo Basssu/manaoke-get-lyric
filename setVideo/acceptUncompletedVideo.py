@@ -66,7 +66,6 @@ def setJson(documentId: str, db: firestore.firestore.Client, domain: str, flavor
         data = jsonData,
         availableCaptionLanguages = ['ko', 'ja'],
         domain = domain,
-        firebaseAlreadyInitialized = True
     )
     document = ToFireStore.toFirestore(
         firestoreDict = {
@@ -78,7 +77,6 @@ def setJson(documentId: str, db: firestore.firestore.Client, domain: str, flavor
         flavor = flavor, 
         documentId = documentId,
         availableCaptionLanguages = ['ko', 'ja'],
-        firebaseAlreadyInitialized = True
         )
     
     deviceTokens = Notification.uidsToDeviceTokens([captionSubmitterUid], db)

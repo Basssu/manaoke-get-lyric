@@ -1,6 +1,7 @@
 from firebase_admin import firestore
 from firebase_admin import credentials
 import firebase_admin
+import ConvenientFunctions as cf
 
 def toFirestore(
         firestoreDict: dict, 
@@ -8,14 +9,9 @@ def toFirestore(
         flavor: str, 
         documentId: str,
         availableCaptionLanguages: str,
-        firebaseAlreadyInitialized: bool = False
         ):
-    if not firebaseAlreadyInitialized:
-        if flavor == "prod":
-            creds = credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
-        else:
-            creds = credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
-        firebase_admin.initialize_app(creds)
+    if not firebase_admin._apps:
+        cf.firebaseInitialize(flavor)
     db = firestore.client()
     if availableCaptionLanguages == ['ja']:
         firestoreDict["uncompletedJsonUrl"] = storageUrl

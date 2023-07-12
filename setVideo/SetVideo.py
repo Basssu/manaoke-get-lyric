@@ -15,12 +15,9 @@ def inputVideoIds() -> list[str]:
     return videoIds
 
 def videoIdsLoop(videoIds: list[str]):
-    cred = cf.firebaseCreds(flavor)
-    domain = cf.firebaseDomain(flavor)
-    firebase_admin.initialize_app(cred,{'storageBucket': f'gs://{domain}'})
+    cf.initializeFirebase(flavor)
     for videoId in videoIds:
-        index = videoIds.index(videoId)
-        setEachVideo(videoId, index != 0)
+        setEachVideo(videoId)
         if not cf.answeredYes('次の動画に進みますか？'):
             unfinishedVideoIds = videoIds[videoIds.index(videoId):]
             break
@@ -38,7 +35,7 @@ def checkCaptionAvailability(videoId: str) -> list[str]:
             availableLanguages.append('ja')
     return availableLanguages
 
-def setEachVideo(videoId: str, firebaseAlreadyInitialized: bool):
+def setEachVideo(videoId: str):
     availableLanguages = checkCaptionAvailability(videoId)
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
@@ -92,7 +89,7 @@ def setEachVideo(videoId: str, firebaseAlreadyInitialized: bool):
         if cf.answeredYes('この動画をスキップしますか？'): return
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
     
-    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages, True)
+    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages)
     pprint.pprint(document) #Firestoreにアップロードした内容
 
 def deleteIfOneCaptionNotExist(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:
@@ -136,9 +133,6 @@ def setPolicy() -> dict:
         processPolicy['playlistIds'] = cf.inputText('playlistIdsを入力してください。(複数の場合、","で区切ってください)').split(",")
     return processPolicy
 
-def getFlavor() -> str:
-    return 'prod' if cf.answeredYes('flavorはどっち？(y = prod, n = stg)') else 'stg'
-
 def main():
     videoIdsLoop(inputVideoIds())
     print('以下の動画はスキップしました。')
@@ -152,7 +146,7 @@ def main():
 
 skippedVideoIdsAndReasons = []
 unfinishedVideoIds = []
-flavor = getFlavor()
+flavor = cf.getFlavor()
 policy = setPolicy()
 main()
 
