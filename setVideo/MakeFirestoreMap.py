@@ -75,7 +75,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
 def makeTokenListFromText(text: str) -> list[str]:
     tokenList = []
     ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
-    textWithoutKakko = removeBrackets(text, '()')
+    textWithoutKakko = cf.removeBrackets(text, '()')
     if text != textWithoutKakko and text.count("(") == 1 and text.count(")") == 1:
         insideKakko = text[text.find("(")+1:text.find(")")]
         if not any((a in insideKakko) for a in ngList):
@@ -96,11 +96,6 @@ def makeNGram(text: str) -> list[str]:
         token = text[0:i + 1]
         resultList.append(token)
     return list(set(resultList)) #重複を削除
-
-def removeBrackets(text: str, brackets: str) -> str:
-    pattern = re.escape(brackets[0]) + r'[^\[{}\]()]*' + re.escape(brackets[1])
-    result = re.sub(pattern, '', text)
-    return result
 
 def youtubeDurationToInMilliseconds(durationStr: str) -> int:
     # 時間の部分（PT1H30M）と秒の部分（PT30S）に分割します

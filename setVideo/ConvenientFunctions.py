@@ -1,5 +1,6 @@
 import datetime
 from firebase_admin import credentials
+import re
 
 def formatTime(time: float) -> str:
     return (datetime.timedelta(seconds=time) + datetime.datetime(1900,1,1)).strftime('%H:%M:%S,%f')[:-3]
@@ -31,3 +32,8 @@ def firebaseDomain(flavor: str):
         return "manaoke-8c082.appspot.com"
     else:
         return "manaoke-stg.appspot.com"
+    
+def removeBrackets(text: str, brackets: str) -> str:
+    pattern = re.escape(brackets[0]) + r'[^\[{}\]()]*' + re.escape(brackets[1])
+    result = re.sub(pattern, '', text)
+    return result
