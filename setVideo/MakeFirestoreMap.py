@@ -51,6 +51,8 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "channelTitle": channelTitle,
             "defaultAudioLanguage": defaultAudioLanguage,
             "durationInMilliseconds": durationInMilliseconds,
+            "hasTranslationAfterSubtitles": 'ja' in captionLanguages,
+            "hasTranslationBeforeSubtitles": 'ko' in captionLanguages,
             "isInvisible": False,
             "isPremium": False,
             "isUncompletedVideo": isGonneBeUncompletedVideo,

@@ -49,7 +49,7 @@ def setEachVideo(videoId: str):
             videoId, 
             languages=['ko'],
             )
-        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
+        firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
         if cf.answeredYes('この動画をスキップしますか？'): return
         jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
