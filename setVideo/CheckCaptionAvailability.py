@@ -1,23 +1,17 @@
 from googleapiclient.discovery import build
 import youtube_transcript_api
-import sys
-import os
-sys.path.append(os.pardir)
-from apiKey import config
 import ConvenientFunctions as cf
+import GetYoutubeData
 
-def videoIdsFromPlaylistId(apiKey, playlistId: str):
-    DEVELOPER_KEY = apiKey
-    youtube = build("youtube", "v3", developerKey=DEVELOPER_KEY)
+def videoIdsFromPlaylistId(playlistId: str):
     next_page_token = None
     video_ids = []
     while 1: 
-        playlist_items_response = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=playlistId,
-            maxResults=50,
-            pageToken=next_page_token
-            ).execute()
+        playlist_items_response = GetYoutubeData.getVideosInPlaylist(
+            youtubePlaylistId = playlistId,
+            nextPageToken = next_page_token,
+            maxResults = 50,
+        )
         for playlist_item in playlist_items_response["items"]:
             video_ids.append(playlist_item["snippet"]["resourceId"]["videoId"])
         next_page_token = playlist_items_response.get('nextPageToken')
@@ -79,7 +73,7 @@ def showVideoIdsWithCaption(videoIds: list[str]):
 
 def main():
     playlistId = cf.inputText('playlistIdを入力')
-    videoIds = videoIdsFromPlaylistId(config.YOUTUBE_API_KEY, playlistId)
+    videoIds = videoIdsFromPlaylistId(playlistId)
     showVideoIdsWithCaption(videoIds)
 
 if __name__ == '__main__':
