@@ -4,20 +4,11 @@ import ConvenientFunctions as cf
 import GetYoutubeData
 
 def videoIdsFromPlaylistId(playlistId: str):
-    next_page_token = None
-    video_ids = []
-    while 1: 
-        playlist_items_response = GetYoutubeData.getVideosInPlaylist(
-            youtubePlaylistId = playlistId,
-            nextPageToken = next_page_token,
-            maxResults = 50,
-        )
-        for playlist_item in playlist_items_response["items"]:
-            video_ids.append(playlist_item["snippet"]["resourceId"]["videoId"])
-        next_page_token = playlist_items_response.get('nextPageToken')
-        if not next_page_token:
-            break
-    return video_ids
+    videoIds = []
+    playlistItems = GetYoutubeData.getItemResponseFromPlaylist(playlistId)
+    for i in range(len(playlistItems)):
+        videoIds.append(playlistItems[i]['snippet']['resourceId']['videoId'])
+    return videoIds
 
 def captionLanguageFromVideoId(videoId: str) -> list[str]:
     languages = []

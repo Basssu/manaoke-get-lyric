@@ -25,3 +25,19 @@ def getVideosInPlaylist(
 
 def builtYoutube():
     return build('youtube', 'v3', developerKey=config.YOUTUBE_API_KEY)
+
+def getItemResponseFromPlaylist(youtubePlaylistId: str):
+    next_page_token = None
+    playlistItemList = []
+    while 1: 
+        playlist_items_response = getVideosInPlaylist(
+            youtubePlaylistId = youtubePlaylistId,
+            nextPageToken = next_page_token,
+            maxResults = 50,
+        )
+        for playlist_item in playlist_items_response["items"]:
+            playlistItemList.append(playlist_item)
+        next_page_token = playlist_items_response.get('nextPageToken')
+        if not next_page_token:
+            break
+    return playlistItemList
