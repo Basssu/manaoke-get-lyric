@@ -74,6 +74,8 @@ def showVideoIdsWithCaption(videoIds: list[str]):
     print(','.join(videosWithOnlyKoreanCaption) + '\n')
     print('日本語字幕と韓国語字幕の両方がある動画の数: ' + str(len(videosWithBothJapaneseAndKoreanCaption)))
     print(','.join(videosWithBothJapaneseAndKoreanCaption) + '\n')
+    print('全ての動画の数: ' + str(len(videoIds)))
+    print(','.join(videoIds) + '\n')
 
 def main():
     playlistId = cf.inputText('playlistIdを入力')
