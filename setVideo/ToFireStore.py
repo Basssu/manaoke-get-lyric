@@ -25,8 +25,22 @@ def toFirestore(
     doc = doc_ref.get()
     if doc.exists:
         # 既存のドキュメントがある場合はフィールドの値を更新
+        deleteKeysFromDict( # 以下のフィールドは更新しない
+            firestoreDict, 
+            [
+                'isUncompletedVideo', 
+                'isWaitingForReview', 
+                'uncompletedJsonUrl'
+                ]
+            )
         doc_ref.update(firestoreDict)
     else:
         # 存在しない場合は新しいドキュメントを作成
         doc_ref.set(firestoreDict)
     return firestoreDict
+
+def deleteKeysFromDict(dict: dict, keys: list[str]):
+    for key in keys:
+        if key in dict:
+            del dict[key]
+    return dict
