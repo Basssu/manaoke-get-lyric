@@ -65,7 +65,6 @@ def setJson(documentId: str, db: firestore.firestore.Client, domain: str, flavor
         flavor = flavor,
         data = jsonData,
         availableCaptionLanguages = ['ko', 'ja'],
-        domain = domain,
     )
     document = ToFireStore.toFirestore(
         firestoreDict = {
