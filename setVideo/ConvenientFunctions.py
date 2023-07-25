@@ -25,9 +25,10 @@ def inputText(question: str) -> str:
 def initializeFirebase(flavor: str):
     cred = firebaseCreds(flavor)
     domain = firebaseDomain(flavor)
-    firebase_admin.initialize_app(cred, {
-        'storageBucket': domain
-    })
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred, {
+            'storageBucket': domain
+        })
     return cred, domain
 
 def firebaseCreds(flavor: str):

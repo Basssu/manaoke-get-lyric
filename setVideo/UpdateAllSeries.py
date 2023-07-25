@@ -2,6 +2,7 @@ import ConvenientFunctions as cf
 from firebase_admin import firestore
 import GetYoutubeData
 import datetime
+import SetVideo
 
 def getCollectionDocsAsDictList(collectionName: str) -> list[dict]:
     db = firestore.client()
@@ -106,6 +107,10 @@ def main():
     print(','.join(allVideoIds)) #追加するべき動画のvideoIdを出力
     if not cf.answeredYes('実際にこれらの動画を追加しますか？'):
         return
-    
+    policy = SetVideo.setPolicy()
+    skippedVideoIds = SetVideo.videoIdsLoop(allVideoIds, flavor, policy)
+    print(f'スキップした動画の数は{len(skippedVideoIds)}です。')
+    print(f'スキップした動画のIDは{skippedVideoIds}です。')
+
 if __name__ == '__main__':
     main()
