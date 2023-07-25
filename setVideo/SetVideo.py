@@ -14,10 +14,10 @@ def inputVideoIds() -> list[str]:
     videoIds = videoIds.split(",")
     return videoIds
 
-def videoIdsLoop(videoIds: list[str]):
+def videoIdsLoop(videoIds: list[str], flavor: str, policy: dict):
     cf.initializeFirebase(flavor)
     for videoId in videoIds:
-        setEachVideo(videoId)
+        setEachVideo(videoId, flavor, policy)
         if not cf.answeredYes('次の動画に進みますか？'):
             unfinishedVideoIds = videoIds[videoIds.index(videoId):]
             break
@@ -35,7 +35,7 @@ def checkCaptionAvailability(videoId: str) -> list[str]:
             availableLanguages.append('ja')
     return availableLanguages
 
-def setEachVideo(videoId: str):
+def setEachVideo(videoId: str, flavor: str, policy: dict):
     availableLanguages = checkCaptionAvailability(videoId)
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
@@ -78,12 +78,10 @@ def setEachVideo(videoId: str):
         koreanCaptions = deleteIfOneCaptionNotExist(koreanCaptions, japaneseCaptions)
         japaneseCaptions = deleteIfOneCaptionNotExist(japaneseCaptions, koreanCaptions)
         if not cf.answeredYes(f'{videoId}:字幕の行数は{len(koreanCaptions)}行です。続けますか？'):
-            skippedVideoIdsAndReasons.append(f'{videoId}: 字幕の行数を見てスキップすると自分で判断しました。')
             return
         jsonData = CaptionsToJson.captionsToJson(koreanCaptions, japaneseCaptions)
         if len(jsonData) != len(koreanCaptions):
             print(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しないため、スキップします。')
-            skippedVideoIdsAndReasons.append(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しない')
             return
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
         if cf.answeredYes('この動画をスキップしますか？'): return
@@ -134,19 +132,9 @@ def setPolicy() -> dict:
     return processPolicy
 
 def main():
-    videoIdsLoop(inputVideoIds())
-    print('以下の動画はスキップしました。')
-    print(",".join(skippedVideoIdsAndReasons))
-    print('\n')
-    print('スキップした理由は以下の通りです。')
-    print("\n".join(skippedVideoIdsAndReasons))
-    print('\n')
-    print('以下の動画は手を付けていません。')
-    print(",".join(unfinishedVideoIds))
+    flavor = cf.getFlavor()
+    policy = setPolicy()
+    videoIdsLoop(inputVideoIds(), flavor, policy)
 
-skippedVideoIdsAndReasons = []
-unfinishedVideoIds = []
-flavor = cf.getFlavor()
-policy = setPolicy()
-main()
-
+if __name__ == '__main__':
+    main()
