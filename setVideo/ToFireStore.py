@@ -16,7 +16,7 @@ def toFirestore(
     if availableCaptionLanguages == ['ja']:
         firestoreDict["uncompletedJsonUrl"] = storageUrl
     elif availableCaptionLanguages == ['ko']:
-        firestoreDict["jsonUrl"] = storageUrl
+        firestoreDict["uncompletedJsonUrl"] = storageUrl
     elif 'ja' in availableCaptionLanguages and 'ko' in availableCaptionLanguages:
         firestoreDict["jsonUrl"] = storageUrl
         

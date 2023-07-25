@@ -51,8 +51,9 @@ def setEachVideo(videoId: str, flavor: str, policy: dict):
             )
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
         if cf.answeredYes('この動画をスキップしますか？'): return
-        jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
-        url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
+        uncompletedJsonData = convertCaptionsToUncompletedJson(koreanCaptions, None)
+        # jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
+        url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
     
     if availableLanguages == ['ja']: # 韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語字幕があります")
