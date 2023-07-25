@@ -12,25 +12,32 @@ def getCollectionDocsAsDictList(collectionName: str) -> list[dict]:
         dictList.append(doc.to_dict())
     return dictList
 
-def seriesLoop(SeriesDocsDictList: list[dict]):
+def updatedPlaylistIdsAndTheVideoId(SeriesDocsDictList: list[dict]) -> dict:
+    result = {}
     for seriesDict in SeriesDocsDictList:
-        addNewVideoToSeries(seriesDict)
+        print(f'{SeriesDocsDictList.index(seriesDict)}/{len(SeriesDocsDictList)}')
+        if not ('playlistId' in seriesDict) or seriesDict['playlistId'] == None:
+            print('No playlistId')
+            continue
+        result[seriesDict["playlistId"]] = addNewVideoToSeries(seriesDict)
+    return result
 
-def addNewVideoToSeries(seriesDict: dict):
+def addNewVideoToSeries(seriesDict: dict) -> list[str]:
     playlistId = seriesDict['playlistId']
     if playlistId == None:
         return
     latestVideoDocDict = latestVideoDocDictInSeries(seriesDict)
-    updatedYoutubeVideoIds = getUpdatedYoutubeVideoIds(seriesDict, latestVideoDocDict)
+    updatedYoutubeVideoIds = getUpdatedYoutubeVideoIds(playlistId, latestVideoDocDict)
+    return updatedYoutubeVideoIds
     
 def latestVideoDocDictInSeries(seriesDict: dict) -> dict:
     db = firestore.client()
     seriesId = seriesDict['playlistId']
     videos_ref = db.collection('videos')
-    videos_ref.where('playlistIds', 'array_contains', seriesId)
-    videos_ref.order_by('publishedAt', direction=firestore.Query.DESCENDING)
-    videos_ref.limit(1)
-    latestVideoDoc = videos_ref.get()[0]
+    query = videos_ref.where('playlistIds', 'array_contains', seriesId).order_by('publishedAt', direction=firestore.Query.DESCENDING).limit(1)
+    list = query.get()
+    print(len(list))
+    latestVideoDoc = list[0]
     return latestVideoDoc.to_dict()
 
 def getUpdatedYoutubeVideoIds(youtubePlaylistId: str, latestVideoDocDict: dict) -> list[str]:
@@ -39,6 +46,7 @@ def getUpdatedYoutubeVideoIds(youtubePlaylistId: str, latestVideoDocDict: dict) 
         youtubeVideoIds = fetchLatestVideoIdsWhenDesendant(latestVideoDocDict, youtubePlaylistId)
     else: #アップロード日時の昇順になっている
         youtubeVideoIds = fetchLatestVideoIdsWhenAsendant(latestVideoDocDict, youtubePlaylistId)
+    return youtubeVideoIds
 
 def fetchLatestVideoIdsWhenDesendant(latestVideoDocDict: dict, youtubePlaylistId: str) -> list[str]:
     videoIds = []
@@ -47,29 +55,55 @@ def fetchLatestVideoIdsWhenDesendant(latestVideoDocDict: dict, youtubePlaylistId
         playlistItemsResponse = GetYoutubeData.getVideosInPlaylist(
             youtubePlaylistId = youtubePlaylistId,
             maxResults= 1,
-            pageToken = nextPagetoken
+            nextPageToken = nextPagetoken
         )
         videoId = playlistItemsResponse["items"][0]["snippet"]["resourceId"]["videoId"]
         if videoId == latestVideoDocDict['videoId']:
             return videoIds
         videoIds.append(videoId)
         nextPagetoken = playlistItemsResponse.get("nextPageToken")
+
 def fetchLatestVideoIdsWhenAsendant(latestVideoDocDict: dict, youtubePlaylistId: str) -> list[str]:
-    print('構築中')
+    playlistItemsResponse = GetYoutubeData.getItemResponseFromPlaylist(youtubePlaylistId)
+    videoIds = []
+    for playlistItem in playlistItemsResponse:
+        publishedAt = publishedAtFromItemResponse(playlistItem)
+        if publishedAt > latestVideoDocDict['publishedAt']:
+            videoIds.append(playlistItem["snippet"]["resourceId"]["videoId"])
+    return videoIds
 
 def isDescendantOfSeries(videoDocDict: dict, youtubePlaylistId: str) -> bool: #Youtubeプレイリストがアップロード日時の降順になっているか
     response = GetYoutubeData.getVideosInPlaylist(
     youtubePlaylistId = youtubePlaylistId,
-    maxResults= 1
+    maxResults = 1
     )
-    publishedAt = datetime.datetime.fromisoformat(response["items"][0]["snippet"]['publishedAt'].replace('Z', '+00:00'))
+    publishedAt = publishedAtFromItemResponse(response["items"][0])
     return videoDocDict['publishedAt'] >= publishedAt
+
+def publishedAtFromItemResponse(videoResponse) -> datetime.datetime:
+    return datetime.datetime.fromisoformat(videoResponse["snippet"]['publishedAt'].replace('Z', '+00:00'))
+
+def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:
+    mergedList = []
+    for key, value in dictData.items():
+        mergedList.extend(value)
+
+    # 重複した要素を削除
+    uniqueList = list(set(mergedList))
+    return uniqueList
 
 def main():
     flavor = cf.getFlavor()
     cf.initializeFirebase(flavor)
     SeriesDocsDictList = getCollectionDocsAsDictList('series')
-    seriesLoop(SeriesDocsDictList)
-
+    updatedVideosDict = updatedPlaylistIdsAndTheVideoId(SeriesDocsDictList) #キーはplaylistId、値はvideoIdの配列
+    print('------------------')
+    for key, value in updatedVideosDict.items():
+        print(f"playlistId:\n{key}\n\nValue:\n{','.join(value)}")
+        print('------------------')
+    allVideoIds = mergeAndRemoveDuplicates(updatedVideosDict)
+    print('全ての動画のvideoId:')
+    print(','.join(allVideoIds)) #追加するべき動画のvideoIdを出力
+    
 if __name__ == '__main__':
     main()
