@@ -12,7 +12,7 @@ import firebase_admin
 def inputVideoIds() -> list[str]:
     videoIds = cf.inputText('videoIdを入力(複数ある場合は","で区切ってください)')
     videoIds = videoIds.split(",")
-    return videoIds
+    return list(set(videoIds))
 
 def videoIdsLoop(videoIds: list[str], flavor: str, policy: dict) -> list[str]: # 返り値は、スキップされた動画のvideoIdのリスト
     skippedVideoIds = []
