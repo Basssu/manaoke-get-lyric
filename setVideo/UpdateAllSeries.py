@@ -104,6 +104,8 @@ def main():
     allVideoIds = mergeAndRemoveDuplicates(updatedVideosDict)
     print('全ての動画のvideoId:')
     print(','.join(allVideoIds)) #追加するべき動画のvideoIdを出力
+    if not cf.answeredYes('実際にこれらの動画を追加しますか？'):
+        return
     
 if __name__ == '__main__':
     main()
