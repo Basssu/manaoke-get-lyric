@@ -78,7 +78,7 @@ def setJson(documentId: str, db: firestore.firestore.Client, domain: str, flavor
         availableCaptionLanguages = ['ko', 'ja'],
         )
     
-    deviceTokens = Notification.uidsToDeviceTokens([captionSubmitterUid], db)
+    deviceTokens = Notification.uidsToDeviceTokens([captionSubmitterUid])
     Notification.sendNotificationByDeviceToken(
         deviceTokens = deviceTokens,
         title = 'あなたが送信した歌詞・字幕の承認が完了しました',

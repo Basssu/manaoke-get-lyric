@@ -1,7 +1,8 @@
 from firebase_admin import firestore
 from firebase_admin import messaging
 
-def uidsToDeviceTokens(uids: list[str], db: firestore.firestore.Client,) -> list[str]:
+def uidsToDeviceTokens(uids: list[str]) -> list[str]:
+    db = firestore.client()
     deviceTokens = []
     for uid in uids:
         deviceToken = db.collection('users').document(uid).get().to_dict()['deviceToken']

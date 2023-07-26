@@ -3,6 +3,7 @@ from firebase_admin import firestore
 import GetYoutubeData
 import datetime
 import SetVideo
+import Notification
 
 def getCollectionDocsAsDictList(collectionName: str) -> list[dict]:
     db = firestore.client()
@@ -93,6 +94,30 @@ def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:
     uniqueList = list(set(mergedList))
     return uniqueList
 
+def updatedSeriesIdList(videoIds: str, updatedVideosDict: dict[str, list[str]]) -> list[str]:
+    seriesIds = []
+    for videoId in videoIds:
+        for key, value in updatedVideosDict.items():
+            if videoId in value:
+                seriesIds.append(key)
+                break
+    return (set(seriesIds))
+
+def sendNotificationForSeriesSubscribers(seriesIds: list[str], SeriesDocsDictList: list[dict]):
+    for seriesId in seriesIds:
+        for seriesDocsDict in SeriesDocsDictList:
+            if not ('playlistId' in seriesDocsDict) or seriesDocsDict['playlistId'] == None or not ('likedBy' in seriesDocsDict) or seriesDocsDict['likedBy'] == None:
+                continue
+            if seriesId == seriesDocsDict['playlistId']:
+                deviceTokens = Notification.uidsToDeviceTokens(seriesDocsDict['likedBy'])
+                body = ''
+                if not ('name' in seriesDocsDict) or seriesDocsDict['name'] == None:
+                    body = '韓国語を理解しながら楽しもう！'
+                else:
+                    body = f'韓国語を理解しながら{seriesDocsDict["name"]}を楽しもう！'
+                Notification.sendNotificationByDeviceToken(deviceTokens, 'お気に入りシリーズの更新', body)
+                break
+
 def main():
     flavor = cf.getFlavor()
     cf.initializeFirebase(flavor)
@@ -111,6 +136,10 @@ def main():
     skippedVideoIds = SetVideo.videoIdsLoop(allVideoIds, flavor, policy)
     print(f'スキップした動画の数は{len(skippedVideoIds)}です。')
     print(f'スキップした動画のIDは{skippedVideoIds}です。')
+    
+    addedVideoIds = [x for x in allVideoIds if x not in skippedVideoIds]
+    updatedSeriesIds = updatedSeriesIdList(addedVideoIds, updatedVideosDict)
+    sendNotificationForSeriesSubscribers(updatedSeriesIds, SeriesDocsDictList)
 
 if __name__ == '__main__':
     main()
