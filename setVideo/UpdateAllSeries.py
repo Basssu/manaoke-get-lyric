@@ -37,9 +37,7 @@ def latestVideoDocDictInSeries(seriesDict: dict) -> dict:
     seriesId = seriesDict['playlistId']
     videos_ref = db.collection('videos')
     query = videos_ref.where('playlistIds', 'array_contains', seriesId).order_by('publishedAt', direction=firestore.Query.DESCENDING).limit(1)
-    list = query.get()
-    print(len(list))
-    latestVideoDoc = list[0]
+    latestVideoDoc = query.get()[0]
     return latestVideoDoc.to_dict()
 
 def getUpdatedYoutubeVideoIds(youtubePlaylistId: str, latestVideoDocDict: dict) -> list[str]:
@@ -47,6 +45,7 @@ def getUpdatedYoutubeVideoIds(youtubePlaylistId: str, latestVideoDocDict: dict) 
     if isDescendantOfSeries(latestVideoDocDict, youtubePlaylistId): #アップロード日時の降順になっている
         youtubeVideoIds = fetchLatestVideoIdsWhenDesendant(latestVideoDocDict, youtubePlaylistId)
     else: #アップロード日時の昇順になっている
+        print('このプレイリストは昇順になっています: ' + youtubePlaylistId)
         youtubeVideoIds = fetchLatestVideoIdsWhenAsendant(latestVideoDocDict, youtubePlaylistId)
     return youtubeVideoIds
 
@@ -74,16 +73,18 @@ def fetchLatestVideoIdsWhenAsendant(latestVideoDocDict: dict, youtubePlaylistId:
             videoIds.append(playlistItem["snippet"]["resourceId"]["videoId"])
     return videoIds
 
-def isDescendantOfSeries(videoDocDict: dict, youtubePlaylistId: str) -> bool: #Youtubeプレイリストがアップロード日時の降順になっているか
+def isDescendantOfSeries(latestVideoDocDict: dict, youtubePlaylistId: str) -> bool: #Youtubeプレイリストがアップロード日時の降順になっているか
     response = GetYoutubeData.getVideosInPlaylist(
     youtubePlaylistId = youtubePlaylistId,
     maxResults = 1
     )
     publishedAt = publishedAtFromItemResponse(response["items"][0])
-    return videoDocDict['publishedAt'] >= publishedAt
+    return latestVideoDocDict['publishedAt'] <= publishedAt
 
 def publishedAtFromItemResponse(videoResponse) -> datetime.datetime:
-    return datetime.datetime.fromisoformat(videoResponse["snippet"]['publishedAt'].replace('Z', '+00:00'))
+    youtubeVideoId = videoResponse["snippet"]["resourceId"]["videoId"]
+    response = GetYoutubeData.getVideo(youtubeVideoId) #動画一本釣りとplaylist経由での動画だとpublishedAtがズレるため
+    return datetime.datetime.fromisoformat(response['snippet']['publishedAt'].replace('Z', '+00:00'))
 
 def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:
     mergedList = []
@@ -94,7 +95,7 @@ def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:
     uniqueList = list(set(mergedList))
     return uniqueList
 
-def updatedSeriesIdList(videoIds: str, updatedVideosDict: dict[str, list[str]]) -> list[str]:
+def updatedSeriesIdList(videoIds: list[str], updatedVideosDict: dict[str, list[str]]) -> list[str]:
     seriesIds = []
     for videoId in videoIds:
         for key, value in updatedVideosDict.items():
@@ -118,6 +119,27 @@ def sendNotificationForSeriesSubscribers(seriesIds: list[str], SeriesDocsDictLis
                 Notification.sendNotificationByDeviceToken(deviceTokens, 'お気に入りシリーズの更新', body)
                 break
 
+def CompletedVideos(youtubeVideoIds: list[str]) -> list[str]:
+    result = []
+    for youtubeVideoId in youtubeVideoIds:
+        if isCompletedVideo(youtubeVideoId):
+            result.append(youtubeVideoId)
+    return result
+
+def isCompletedVideo(youtubeVideoId: str) -> bool:
+    db = firestore.client()
+    videos_ref = db.collection('videos')
+    query = videos_ref.where('videoId', '==', youtubeVideoId).limit(1)
+    list = query.get()
+    print('長さ')
+    print(len(list))
+    videoDocDict = list[0].to_dict()
+    if not 'isUncompletedVideo' in videoDocDict or videoDocDict['isUncompletedVideo'] == None:
+        return False
+    if videoDocDict['isUncompletedVideo'] == False:
+        return True
+    return False
+
 def main():
     flavor = cf.getFlavor()
     cf.initializeFirebase(flavor)
@@ -138,7 +160,8 @@ def main():
     print(f'スキップした動画のIDは{skippedVideoIds}です。')
     
     addedVideoIds = [x for x in allVideoIds if x not in skippedVideoIds]
-    updatedSeriesIds = updatedSeriesIdList(addedVideoIds, updatedVideosDict)
+    completedAddedVideoIds = CompletedVideos(addedVideoIds)
+    updatedSeriesIds = updatedSeriesIdList(completedAddedVideoIds, updatedVideosDict)
     sendNotificationForSeriesSubscribers(updatedSeriesIds, SeriesDocsDictList)
 
 if __name__ == '__main__':
