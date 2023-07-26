@@ -1,7 +1,7 @@
 from firebase_admin import firestore
-from firebase_admin import credentials
 import firebase_admin
 import ConvenientFunctions as cf
+from typing import Tuple
 
 def toFirestore(
         firestoreDict: dict, 
@@ -44,3 +44,45 @@ def deleteKeysFromDict(dict: dict, keys: list[str]):
         if key in dict:
             del dict[key]
     return dict
+
+def completedVideos(youtubeVideoIds: list[str]) -> list[str]:
+    result = []
+    for youtubeVideoId in youtubeVideoIds:
+        if isCompletedVideo(youtubeVideoId):
+            result.append(youtubeVideoId)
+    return result
+
+def isCompletedVideo(youtubeVideoId: str) -> bool:
+    videoDocDict = fetchVideoByYoutubeVideoId(youtubeVideoId).to_dict()
+    if not 'isUncompletedVideo' in videoDocDict or videoDocDict['isUncompletedVideo'] == None:
+        return False
+    if videoDocDict['isUncompletedVideo'] == False:
+        return True
+    return False
+
+def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
+    if not firebase_admin._apps:
+        cf.initializeFirebase(cf.getFlavor())
+    db = firestore.client()
+    videos_ref = db.collection('videos')
+    query = videos_ref.where('videoId', '==', youtubeVideoId).limit(1)
+    list = query.get()
+    print('長さ')
+    print(len(list))
+    return list[0]
+
+def fetchDocbyCollectionNameAndDocumentId(collectionName: str, documentId: str):
+    if not firebase_admin._apps:
+        cf.initializeFirebase(cf.getFlavor())
+    db = firestore.client()
+    docRef = db.collection(collectionName).document(documentId)
+    return docRef.get()
+
+def updatedSeriesIdList(youtubeVideoIds: list[str]) -> list[str]:
+    seriesIds = []
+    for youtubeVideoId in youtubeVideoIds:
+        videoDocDict = fetchVideoByYoutubeVideoId(youtubeVideoId).to_dict()
+        if not 'playlistIds' in videoDocDict or videoDocDict['playlistIds'] == None:
+            continue
+        seriesIds.extend(videoDocDict['playlistIds'])
+    return (set(seriesIds))

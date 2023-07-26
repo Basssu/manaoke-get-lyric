@@ -4,6 +4,7 @@ import GetYoutubeData
 import datetime
 import SetVideo
 import Notification
+import ToFireStore
 
 def getCollectionDocsAsDictList(collectionName: str) -> list[dict]:
     db = firestore.client()
@@ -95,51 +96,6 @@ def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:
     uniqueList = list(set(mergedList))
     return uniqueList
 
-def updatedSeriesIdList(videoIds: list[str], updatedVideosDict: dict[str, list[str]]) -> list[str]:
-    seriesIds = []
-    for videoId in videoIds:
-        for key, value in updatedVideosDict.items():
-            if videoId in value:
-                seriesIds.append(key)
-                break
-    return (set(seriesIds))
-
-def sendNotificationForSeriesSubscribers(seriesIds: list[str], SeriesDocsDictList: list[dict]):
-    for seriesId in seriesIds:
-        for seriesDocsDict in SeriesDocsDictList:
-            if not ('playlistId' in seriesDocsDict) or seriesDocsDict['playlistId'] == None or not ('likedBy' in seriesDocsDict) or seriesDocsDict['likedBy'] == None:
-                continue
-            if seriesId == seriesDocsDict['playlistId']:
-                deviceTokens = Notification.uidsToDeviceTokens(seriesDocsDict['likedBy'])
-                body = ''
-                if not ('name' in seriesDocsDict) or seriesDocsDict['name'] == None:
-                    body = '韓国語を理解しながら楽しもう！'
-                else:
-                    body = f'韓国語を理解しながら{seriesDocsDict["name"]}を楽しもう！'
-                Notification.sendNotificationByDeviceToken(deviceTokens, 'お気に入りシリーズの更新', body)
-                break
-
-def CompletedVideos(youtubeVideoIds: list[str]) -> list[str]:
-    result = []
-    for youtubeVideoId in youtubeVideoIds:
-        if isCompletedVideo(youtubeVideoId):
-            result.append(youtubeVideoId)
-    return result
-
-def isCompletedVideo(youtubeVideoId: str) -> bool:
-    db = firestore.client()
-    videos_ref = db.collection('videos')
-    query = videos_ref.where('videoId', '==', youtubeVideoId).limit(1)
-    list = query.get()
-    print('長さ')
-    print(len(list))
-    videoDocDict = list[0].to_dict()
-    if not 'isUncompletedVideo' in videoDocDict or videoDocDict['isUncompletedVideo'] == None:
-        return False
-    if videoDocDict['isUncompletedVideo'] == False:
-        return True
-    return False
-
 def main():
     flavor = cf.getFlavor()
     cf.initializeFirebase(flavor)
@@ -154,15 +110,7 @@ def main():
     print(','.join(allVideoIds)) #追加するべき動画のvideoIdを出力
     if not cf.answeredYes('実際にこれらの動画を追加しますか？'):
         return
-    policy = SetVideo.setPolicy()
-    skippedVideoIds = SetVideo.videoIdsLoop(allVideoIds, flavor, policy)
-    print(f'スキップした動画の数は{len(skippedVideoIds)}です。')
-    print(f'スキップした動画のIDは{skippedVideoIds}です。')
+    SetVideo.setVideos(flavor = flavor, youtubeVideoIds = allVideoIds)
     
-    addedVideoIds = [x for x in allVideoIds if x not in skippedVideoIds]
-    completedAddedVideoIds = CompletedVideos(addedVideoIds)
-    updatedSeriesIds = updatedSeriesIdList(completedAddedVideoIds, updatedVideosDict)
-    sendNotificationForSeriesSubscribers(updatedSeriesIds, SeriesDocsDictList)
-
 if __name__ == '__main__':
     main()

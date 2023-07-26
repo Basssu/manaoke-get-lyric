@@ -5,8 +5,8 @@ import MakeFirestoreMap
 import ToStorage
 import ToFireStore
 import pprint
-from typing import Optional
-import firebase_admin
+from typing import Optional, Tuple
+import Notification
 
 # ビデオIDを入力する
 def inputVideoIds() -> list[str]:
@@ -137,12 +137,53 @@ def setPolicy() -> dict:
         processPolicy['playlistIds'] = cf.inputText('playlistIdsを入力してください。(複数の場合、","で区切ってください)').split(",")
     return processPolicy
 
+def classifyYoutubeVideoDocs(youtubeVideoIds: list[str]) -> Tuple:
+    musicVideoDocs: list = []
+    videoVideoDocs: list = []
+    for youtubeVideoId in youtubeVideoIds:
+        videoDoc = ToFireStore.fetchVideoByYoutubeVideoId(youtubeVideoId)
+        videoDocDict = videoDoc.to_dict()
+        if videoDocDict == None or not 'category' in videoDocDict or videoDocDict['category'] == None:
+            continue
+        category = videoDocDict['category']
+        if category == 'music':
+            musicVideoDocs.append(videoDoc)
+        elif category == 'video':
+            videoVideoDocs.append(videoDoc)
+    
+    return musicVideoDocs, videoVideoDocs
+
+def videoVideoDocsToSeriesIds(videoVideoDocs: list) -> list:
+    seriesIds = []
+    for videoVideoDoc in videoVideoDocs:
+        videoVideoDocDict = videoVideoDoc.to_dict()
+        if videoVideoDocDict == None or not 'playlistIds' in videoVideoDocDict or videoVideoDocDict['playlistIds'] == None:
+            continue
+        seriesIds.extend(videoVideoDocDict['playlistIds'])
+    return list(set(seriesIds))
+
+def setVideos(flavor: str, youtubeVideoIds: list[str] = None):
+    policy = setPolicy()
+    youtubeVideoIds = youtubeVideoIds if youtubeVideoIds != None else inputVideoIds()
+    skippedYoutubeVideoIds = videoIdsLoop(youtubeVideoIds, flavor, policy)
+    addedYoutubeVideoIds = [x for x in youtubeVideoIds if x not in skippedYoutubeVideoIds]
+    print(f'スキップした動画の数: {len(skippedYoutubeVideoIds)}')
+    print(f'スキップした動画のYoutubeVideoID: {skippedYoutubeVideoIds}')
+    print('\n')
+    print(f'追加した動画の数: {len(addedYoutubeVideoIds)}')
+    print(f'追加した動画のYoutubeVideoID: {addedYoutubeVideoIds}')
+    if not cf.answeredYes('通知処理に進みますか？'):
+        return
+    completedVideos = ToFireStore.completedVideos(addedYoutubeVideoIds)
+    musicVideoDocs, videoVideoDocs = classifyYoutubeVideoDocs(completedVideos)
+    Notification.sendCelebrityLikersByMusicVideoDocs(musicVideoDocs)
+    updatedSeriesIds = videoVideoDocsToSeriesIds(videoVideoDocs)
+    for seriesId in updatedSeriesIds:
+        Notification.sendToSeriesLiker(seriesId)
+
 def main():
     flavor = cf.getFlavor()
-    policy = setPolicy()
-    skippedVideoList = videoIdsLoop(inputVideoIds(), flavor, policy)
-    print(f'スキップした動画の数は{len(skippedVideoList)}です。')
-    print(f'スキップした動画のIDは{skippedVideoList}です。')
+    setVideos(flavor)
 
 if __name__ == '__main__':
     main()
