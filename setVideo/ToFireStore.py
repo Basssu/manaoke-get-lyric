@@ -1,7 +1,7 @@
 from firebase_admin import firestore
 import firebase_admin
 import ConvenientFunctions as cf
-from typing import Tuple
+import pprint
 
 def toFirestore(
         firestoreDict: dict, 
@@ -38,6 +38,14 @@ def toFirestore(
         # 存在しない場合は新しいドキュメントを作成
         doc_ref.set(firestoreDict)
     return firestoreDict
+
+def afterReview(dict: dict, documentId: str):
+    db = firestore.client()
+    doc_ref = db.collection('videos').document(documentId)
+    doc_ref.update(dict)
+    print('firestoreに反映しました')
+    pprint.pprint(dict)
+    return 
 
 def deleteKeysFromDict(dict: dict, keys: list[str]):
     for key in keys:
