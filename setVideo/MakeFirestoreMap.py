@@ -1,26 +1,23 @@
 import os
 import sys
 sys.path.append(os.pardir)
-from apiKey import config
 from googleapiclient.discovery import build
 import ConvenientFunctions as cf
-import re
+import GetYoutubeData
 import datetime
 import pytz
 
 def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool, captionLanguages: list[str]):
-    apikey = config.YOUTUBE_API_KEY
-    youtube = build('youtube', 'v3', developerKey=apikey)
-    response = youtube.videos().list(part='snippet,contentDetails', id=videoId).execute()
-
-    youtubeTitle: str = response['items'][0]['snippet']['title']
+    response = GetYoutubeData.getVideo(videoId)
+    
+    youtubeTitle: str = response['snippet']['title']
     title = youtubeTitle
-    channelId = response['items'][0]['snippet']['channelId']
-    publishedAt = response['items'][0]['snippet']['publishedAt']
-    channelTitle = response['items'][0]['snippet']['channelTitle'] 
-    thumbnailUrl = response['items'][0]['snippet']['thumbnails']['medium']['url']
-    defaultAudioLanguage = response['items'][0]['snippet']['defaultAudioLanguage']
-    durationInMilliseconds = youtubeDurationToInMilliseconds(response['items'][0]['contentDetails']['duration'])
+    channelId = response['snippet']['channelId']
+    publishedAt = response['snippet']['publishedAt']
+    channelTitle = response['snippet']['channelTitle'] 
+    thumbnailUrl = response['snippet']['thumbnails']['medium']['url']
+    defaultAudioLanguage = response['snippet']['defaultAudioLanguage']
+    durationInMilliseconds = youtubeDurationToInMilliseconds(response['contentDetails']['duration'])
     print(f'videoId: {videoId}')
     print(f'title: {title}')
 
@@ -51,6 +48,8 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "channelTitle": channelTitle,
             "defaultAudioLanguage": defaultAudioLanguage,
             "durationInMilliseconds": durationInMilliseconds,
+            "hasTranslationAfterSubtitles": 'ja' in captionLanguages,
+            "hasTranslationBeforeSubtitles": 'ko' in captionLanguages,
             "isInvisible": False,
             "isPremium": False,
             "isUncompletedVideo": isGonneBeUncompletedVideo,

@@ -60,18 +60,23 @@ for doc in videos_docs:
         uncompletedJsonUrl = None
 
     if uncompletedJsonUrl == None:
-        originnalCaptionLanguages = ['ja', 'ko']
+        hasTranslationBeforeSubtitles = True
+        hasTranslationAfterSubtitles = True
     else:
-        originnalCaptionLanguages = ['ja']
+        hasTranslationAfterSubtitles = True
+        hasTranslationBeforeSubtitles = False
     try:
         doc_ref = db.collection('videos').document(doc.id)
-        doc_ref.update({'originnalCaptionLanguages': originnalCaptionLanguages})
+        doc_ref.update({
+            'hasTranslationAfterSubtitles': hasTranslationAfterSubtitles,
+            'hasTranslationBeforeSubtitles': hasTranslationBeforeSubtitles
+            })
         print('done')
     except Exception as e:
         print('=== エラー内容 ===')
         print('type:' + str(type(e)))
         print('args:' + str(e.args))
-        print('message:' + e.message)
+        # print('message:' + e.message)
         print('e自身:' + str(e))
 
     count = count + 1
