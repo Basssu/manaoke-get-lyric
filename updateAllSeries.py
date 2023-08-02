@@ -129,4 +129,4 @@ for doc in series_docs:
     addVideos(videoId, playlistId)
 
 print(video_ids)
-print(' '.join(video_ids))
+print(','.join(video_ids))
