@@ -14,14 +14,14 @@ def inputVideoIds() -> list[str]:
     videoIds = videoIds.split(",")
     return list(set(videoIds))
 
-def videoIdsLoop(videoIds: list[str], flavor: str, policy: dict) -> list[str]: # 返り値は、スキップされた動画のvideoIdのリスト
+def videoIdsLoop(videoIds: list[str], flavor: str, policy: dict, isNonStop: bool) -> list[str]: # 返り値は、スキップされた動画のvideoIdのリスト
     skippedVideoIds = []
     cf.initializeFirebase(flavor)
     for videoId in videoIds:
-        isNotSkipped = setEachVideo(videoId, flavor, policy)
+        isNotSkipped = setEachVideo(videoId, flavor, policy, isNonStop)
         if not isNotSkipped:
             skippedVideoIds.append(videoId)
-        if not cf.answeredYes('次の動画に進みますか？'):
+        if not isNonStop and not cf.answeredYes('次の動画に進みますか？'):
             return skippedVideoIds
     return skippedVideoIds
 
@@ -38,12 +38,12 @@ def checkCaptionAvailability(videoId: str) -> list[str]:
             availableLanguages.append('ja')
     return availableLanguages
 
-def setEachVideo(videoId: str, flavor: str, policy: dict) -> bool: #返り値は、この動画が追加されたかどうか(true: 正常に追加された, false: 追加されなかった)
+def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bool: #返り値は、この動画が追加されたかどうか(true: 正常に追加された, false: 追加されなかった)
     availableLanguages = checkCaptionAvailability(videoId)
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
-        if cf.answeredYes('この動画をスキップしますか？'): return False
+        if not isNonStop and cf.answeredYes('この動画をスキップしますか？'): return False
         url = None
     
     if availableLanguages == ['ko']: # 日本語字幕がない場合
@@ -53,7 +53,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict) -> bool: #返り値は
             languages=['ko'],
             )
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
-        if cf.answeredYes('この動画をスキップしますか？'): return False
+        if not isNonStop and cf.answeredYes('この動画をスキップしますか？'): return False
         uncompletedJsonData = convertCaptionsToUncompletedJson(koreanCaptions, None)
         # jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
@@ -66,7 +66,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict) -> bool: #返り値は
             )
         uncompletedJsonData = convertCaptionsToUncompletedJson(None, japaneseCaptions)
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
-        if cf.answeredYes('この動画をスキップしますか？'): return False
+        if not isNonStop and cf.answeredYes('この動画をスキップしますか？'): return False
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
     
     if 'ja' in availableLanguages and 'ko' in availableLanguages: # 日本語・韓国語字幕がある場合
@@ -88,7 +88,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict) -> bool: #返り値は
             print(f'{videoId}: スクレイプした字幕の行数とjsonの行数が一致しないため、スキップします。')
             return False
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
-        if cf.answeredYes('この動画をスキップしますか？'): return False
+        if not isNonStop and cf.answeredYes('この動画をスキップしますか？'): return False
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
     
     document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages)
@@ -162,10 +162,10 @@ def videoVideoDocsToSeriesIds(videoVideoDocs: list) -> list:
         seriesIds.extend(videoVideoDocDict['playlistIds'])
     return list(set(seriesIds))
 
-def setVideos(flavor: str, youtubeVideoIds: list[str] = None):
+def setVideos(flavor: str, youtubeVideoIds: list[str] = None, isNonStop: bool = False):
     policy = setPolicy()
     youtubeVideoIds = youtubeVideoIds if youtubeVideoIds != None else inputVideoIds()
-    skippedYoutubeVideoIds = videoIdsLoop(youtubeVideoIds, flavor, policy)
+    skippedYoutubeVideoIds = videoIdsLoop(youtubeVideoIds, flavor, policy, isNonStop)
     addedYoutubeVideoIds = [x for x in youtubeVideoIds if x not in skippedYoutubeVideoIds]
     print(f'スキップした動画の数: {len(skippedYoutubeVideoIds)}')
     print(f'スキップした動画のYoutubeVideoID: {skippedYoutubeVideoIds}')
@@ -183,7 +183,7 @@ def setVideos(flavor: str, youtubeVideoIds: list[str] = None):
 
 def main():
     flavor = cf.getFlavor()
-    setVideos(flavor)
+    setVideos(flavor, isNonStop = cf.answeredYes('動画をスキップせずに処理しますか？'))
 
 if __name__ == '__main__':
     main()

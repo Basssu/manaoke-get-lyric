@@ -16,7 +16,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
     publishedAt = response['snippet']['publishedAt']
     channelTitle = response['snippet']['channelTitle'] 
     thumbnailUrl = response['snippet']['thumbnails']['medium']['url']
-    defaultAudioLanguage = response['snippet']['defaultAudioLanguage']
+    defaultAudioLanguage = response['snippet'].get('defaultAudioLanguage')
     durationInMilliseconds = youtubeDurationToInMilliseconds(response['contentDetails']['duration'])
     print(f'videoId: {videoId}')
     print(f'title: {title}')
