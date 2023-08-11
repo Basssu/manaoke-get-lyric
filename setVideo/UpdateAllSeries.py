@@ -8,7 +8,7 @@ import ToFireStore
 
 def getCollectionDocsAsDictList(collectionName: str) -> list[dict]:
     db = firestore.client()
-    collection_ref = db.collection(collectionName)
+    collection_ref = db.collection(collectionName).where('isUpdatable', '==', True)
     docs = collection_ref.get()
     dictList = []
     for doc in docs:
