@@ -3,10 +3,13 @@ import os
 sys.path.append(os.pardir)
 from apiKey import config
 from googleapiclient.discovery import build
+from typing import Optional
 
-def getVideo(youtubeVideoId: str):
+def getVideo(youtubeVideoId: str) -> Optional[dict]:
     youtube = builtYoutube()
     response = youtube.videos().list(part='snippet,contentDetails', id=youtubeVideoId).execute()
+    if len(response['items']) == 0:
+        return None
     return response['items'][0]
 
 def getVideosInPlaylist(

@@ -9,7 +9,9 @@ import pytz
 
 def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool, captionLanguages: list[str]):
     response = GetYoutubeData.getVideo(videoId)
-    
+    if response is None:
+        print('動画情報無し')
+        return None
     youtubeTitle: str = response['snippet']['title']
     title = youtubeTitle
     channelId = response['snippet']['channelId']
@@ -50,7 +52,7 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "durationInMilliseconds": durationInMilliseconds,
             "hasTranslationAfterSubtitles": 'ja' in captionLanguages,
             "hasTranslationBeforeSubtitles": 'ko' in captionLanguages,
-            "isInvisible": False,
+            "isInvisible": durationInMilliseconds < 60000,
             "isPremium": False,
             "isUncompletedVideo": isGonneBeUncompletedVideo,
             "isWaitingForReview": False,
