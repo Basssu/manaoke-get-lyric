@@ -8,7 +8,10 @@ def uidsToDeviceTokens(uids: list[str]) -> list[str]:
     db = firestore.client()
     deviceTokens = []
     for uid in uids:
-        deviceToken = db.collection('users').document(uid).get().to_dict()['deviceToken']
+        try:
+            deviceToken = db.collection('users').document(uid).get().to_dict()['deviceToken']
+        except:
+            deviceToken = None
         if(deviceToken != None):
             deviceTokens.append(deviceToken)
 
