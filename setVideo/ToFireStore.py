@@ -79,6 +79,12 @@ def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
     print(len(list))
     return list[0]
 
+def fetchVideosByYouttubeVideoIds(youtubeVideoIds: list[str]):
+    result = []
+    for i in range(len(youtubeVideoIds)):
+        result.append(fetchVideoByYoutubeVideoId(youtubeVideoIds[i]))
+    return result
+
 def fetchDocbyCollectionNameAndDocumentId(collectionName: str, documentId: str):
     if not firebase_admin._apps:
         cf.initializeFirebase(cf.getFlavor())
