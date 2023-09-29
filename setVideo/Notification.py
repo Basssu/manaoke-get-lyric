@@ -52,7 +52,8 @@ def sendNotificationToCelebrityLikers(
         print(f'celebrities/{celebrityId} のlikedByをうまく取得できませんでした。')
         return
     likedBy = CelebrityDocDict['likedBy']
-    deviceTokens = uidsToDeviceTokens(likedBy)
+    uids = uidsToSendNotification(likedBy, category)
+    deviceTokens = uidsToDeviceTokens(uids)
     if body == None:
         body = '韓国語を理解しながら楽しもう！'
     title = f'{CelebrityDocDict["name"]}の新着動画'
@@ -75,6 +76,13 @@ def sendCelebrityLikersByVideoDocs(videoDocs: list[firestore.DocumentSnapshot]):
             body = f'「{videoDocDict["title"]}」を韓国語で楽しもう！'
         for celebrityId in celebrityIds if celebrityIds != None else [] :
             sendNotificationToCelebrityLikers(celebrityId, body, category, videoDoc.id)
+            
+def uidsToSendNotification(uids: list[str], category: str):
+    result = []
+    for uid in uids:
+        if ToFireStore.isMusicNotificationEnabled(uid, category):
+            result.append(uid)
+    return result
 
 # ↓シリーズの動画が追加されたときに、シリーズをお気に入り登録している人に通知を送信する処理をしていたとき
 # def sendCelebrityLikersByMusicVideoDocs(musicVideoDocs: list[firestore.DocumentSnapshot]):
