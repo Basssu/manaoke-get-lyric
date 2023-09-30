@@ -79,6 +79,9 @@ def setJson(documentId: str, flavor: str):
         deviceTokens = deviceTokens,
         title = 'あなたが送信した歌詞・字幕の承認が完了しました',
         body = 'ありがとうございます！これで他のオタクたちもこの動画を楽しめます！',
+        data = {
+            'route': 'reviewed_video_list_by_user',
+        }
     )
     Notification.sendCelebrityLikersByVideoDocs([videoDoc])
     # sendNotificationToUsers(category, celebrityIds, playlistIds, title, documentId)
