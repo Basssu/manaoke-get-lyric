@@ -79,6 +79,23 @@ def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
     print(len(list))
     return list[0]
 
+def isMusicNotificationEnabled(uid: str, category: str) -> bool:
+    if not firebase_admin._apps:
+        cf.initializeFirebase(cf.getFlavor())
+    db = firestore.client()
+    docRef = db.collection('users').document(uid)
+    fieldName = 'isMusicNotificationEnabled'
+    if category == 'video':
+        fieldName = 'isVideoNotificationEnabled'
+    isNotificationEnabled = docRef.get().to_dict().get(fieldName)
+    return isNotificationEnabled if isNotificationEnabled != None else False
+
+def fetchVideosByYouttubeVideoIds(youtubeVideoIds: list[str]):
+    result = []
+    for i in range(len(youtubeVideoIds)):
+        result.append(fetchVideoByYoutubeVideoId(youtubeVideoIds[i]))
+    return result
+
 def fetchDocbyCollectionNameAndDocumentId(collectionName: str, documentId: str):
     if not firebase_admin._apps:
         cf.initializeFirebase(cf.getFlavor())

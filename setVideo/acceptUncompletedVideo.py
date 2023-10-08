@@ -24,15 +24,16 @@ def videoIdLoop(flavor: str):
             break
 
 def setJson(documentId: str, flavor: str):
-    videoDocDict = ToFireStore.fetchDocbyCollectionNameAndDocumentId('videos', documentId).to_dict()
+    videoDoc = ToFireStore.fetchDocbyCollectionNameAndDocumentId('videos', documentId)
+    videoDocDict = videoDoc.to_dict()
     isUncompletedVideo = videoDocDict.get('isUncompletedVideo')
     isWaitingForReview = videoDocDict.get('isWaitingForReview')
     uncompletedJsonUrl = videoDocDict.get('uncompletedJsonUrl')
     captionSubmitterUid = videoDocDict.get('captionSubmitterUid')
-    category = videoDocDict.get('category')
-    celebrityIds = videoDocDict.get('celebrityIds')
-    playlistIds = videoDocDict.get('playlistIds')
-    title = videoDocDict.get('title')
+    # category = videoDocDict.get('category')
+    # celebrityIds = videoDocDict.get('celebrityIds')
+    # playlistIds = videoDocDict.get('playlistIds')
+    # title = videoDocDict.get('title')
     if isUncompletedVideo != True or isWaitingForReview != True or uncompletedJsonUrl == None or captionSubmitterUid == None:
         print('この動画は承認作業ができません')
         print('isUncompletedVideo: ' + str(isUncompletedVideo))
@@ -44,7 +45,7 @@ def setJson(documentId: str, flavor: str):
     uncompletedDictList: list[dict] = json.loads(response.read().decode())
     koreanCaptions = []
     japaneseCaptions = []
-    hasJapaneseCaptions = uncompletedDictList[0]['ja'] != None
+    hasJapaneseCaptions = len(uncompletedDictList) != 0 and uncompletedDictList[0]['ja'] != None
     for oneLine in uncompletedDictList:
         koreanCaptions.append({
             'time': oneLine['time'],
@@ -78,23 +79,22 @@ def setJson(documentId: str, flavor: str):
         deviceTokens = deviceTokens,
         title = 'あなたが送信した歌詞・字幕の承認が完了しました',
         body = 'ありがとうございます！これで他のオタクたちもこの動画を楽しめます！',
+        data = {
+            'route': 'reviewed_video_list_by_user',
+        }
     )
-    sendNotificationToUsers(category, celebrityIds, playlistIds, title)
+    Notification.sendCelebrityLikersByVideoDocs([videoDoc])
+    # sendNotificationToUsers(category, celebrityIds, playlistIds, title, documentId)
 
-def sendNotificationToUsers(
-        category: Optional[str], 
-        celebrityIds: Optional[list[str]], 
-        playlistIds: Optional[list[str]],
-        title: Optional[str] = None,
-        ):
-    if category == 'music' and celebrityIds != None:
-        for celebrity in celebrityIds:
-            Notification.sendNotificationToCelebrityLikers(celebrity, f'「{title}」を韓国語で歌おう！' if title != None else None)
-            print(f'アーティスト(id: {celebrity})をお気に入り登録している人に通知を送信しました')
-    if category == 'video' and playlistIds != None:
-        for playlist in playlistIds:
-            Notification.sendToSeriesLiker(playlist)
-            print(f'シリーズ(id: {playlist})をお気に入り登録している人に通知を送信しました')
+# def se elebrityId})をお気に入り登録している人に通知を送信しました')
+    # if category == 'music' and celebrityIds != None:
+    #     for celebrity in celebrityIds:
+    #         Notification.sendNotificationToCelebrityLikers(celebrity, f'「{title}」を韓国語で歌おう！' if title != None else None)
+    #         print(f'アーティスト(id: {celebrity})をお気に入り登録している人に通知を送信しました')
+    # if category == 'video' and playlistIds != None:
+    #     for playlist in playlistIds:
+    #         Notification.sendToSeriesLiker(playlist)
+    #         print(f'シリーズ(id: {playlist})をお気に入り登録している人に通知を送信しました')
     
 def main():
     flavor = cf.getFlavor()
