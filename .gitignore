@@ -4,3 +4,4 @@ apiKey/
 uncompletedVideos/
 __pycache__/
 setVideo/__pycache__/
+setVideo/csv/
