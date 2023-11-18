@@ -2,6 +2,7 @@ from firebase_admin import firestore
 import firebase_admin
 import ConvenientFunctions as cf
 import pprint
+import datetime
 
 def toFirestore(
         firestoreDict: dict, 
@@ -98,6 +99,31 @@ def isMusicNotificationEnabled(uid: str, category: str) -> bool:
         fieldName = 'isVideoNotificationEnabled'
     isNotificationEnabled = docRef.get().to_dict().get(fieldName)
     return isNotificationEnabled if isNotificationEnabled != None else False
+
+def fetchRangedUsers(start: datetime.datetime, end: datetime.datetime) -> list[dict]:
+    if not firebase_admin._apps:
+        cf.initializeFirebase(cf.getFlavor())
+    lastDoc = None
+    db = firestore.client()
+    users = []
+    query = db.collection('users').where('createdAt', '>=', start).order_by('createdAt').limit(1)
+    while 1:
+        if lastDoc == None:
+            docs = query.get()
+            print('読み込み')
+        else:
+            docs = query.start_after(lastDoc).get()
+            print('読み込み')
+        if len(docs) == 0:
+            break
+        user = docs[0].to_dict()
+        if user['createdAt'] >= end:
+            break
+        lastDoc = docs[0]
+        if user['birthday'] != None:
+            users.append(user)
+    return users
+    
 
 def fetchVideosByYouttubeVideoIds(youtubeVideoIds: list[str]):
     result = []
