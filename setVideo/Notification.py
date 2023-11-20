@@ -23,18 +23,25 @@ def sendNotificationByDeviceToken(
         body: str,
         data: dict[str, str] = {},
         ):
-    print(f'{len(deviceTokens)}人に通知を送信します。')
+    print(f'合計{len(deviceTokens)}人に通知を送信します。')
     try:
-        message = messaging.MulticastMessage(
+        sendableTokens = []
+        for i in range(len(deviceTokens)): # MulticastMessageで一度に送れるのは500人までのため
+            sendableTokens.append(deviceTokens[i])
+            if (i + 1) % 500 != 0 and i != len(deviceTokens) - 1:
+                continue
+            message = messaging.MulticastMessage(
             notification=messaging.Notification(
                 title=title,
                 body=body,
-            ),
-            tokens=deviceTokens,
+                ),
+            tokens=sendableTokens,
             data=data,
-        )
-        response = messaging.send_multicast(message)
-        print('Successfully sent message:', response)
+            )
+            response = messaging.send_multicast(message)
+            print('Successfully sent message:', response)
+            print(f'{len(deviceTokens)}人中の{len(sendableTokens)}人に送信完了。')
+            sendableTokens.clear()
     except Exception as e:
         print('=== エラー内容 ===')
         print('type:' + str(type(e)))
