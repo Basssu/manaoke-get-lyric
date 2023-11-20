@@ -83,6 +83,10 @@ def setJson(documentId: str, flavor: str):
             'route': 'reviewed_video_list_by_user',
         }
     )
+    hasTranslationAfterSubtitles = videoDocDict.get('hasTranslationAfterSubtitles')
+    if hasTranslationAfterSubtitles != True:
+        print('翻訳後字幕がデフォルトで存在しないため、お気に入り登録している人に通知を送信しませんでした。')
+        return
     Notification.sendCelebrityLikersByVideoDocs([videoDoc])
     # sendNotificationToUsers(category, celebrityIds, playlistIds, title, documentId)
 
