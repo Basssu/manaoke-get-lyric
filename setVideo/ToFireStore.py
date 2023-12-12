@@ -3,6 +3,7 @@ import firebase_admin
 import ConvenientFunctions as cf
 import pprint
 import datetime
+from typing import Optional
 
 def toFirestore(
         firestoreDict: dict, 
@@ -77,6 +78,18 @@ def fetchJasracCodeList():
     print('取得したドキュメント数')
     print(len(videoDocs))
     return videoDocs
+
+def fetchUserByUid(uid: str):
+    if not firebase_admin._apps:
+        cf.initializeFirebase(cf.getFlavor())
+    db = firestore.client()
+    userDoc = db.collection('users').document(uid).get()
+    return userDoc
+
+def fetchUserBirthdayByUids(uid: str) -> Optional[datetime.datetime]:
+    userDoc = fetchUserByUid(uid)
+    birthday = userDoc.to_dict().get('birthday')
+    return birthday
 
 def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
     if not firebase_admin._apps:

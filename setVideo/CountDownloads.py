@@ -52,11 +52,22 @@ def weeklyDownloads(year: int, month: int, day: int):
     print(f'ユーザ数: {len(users)}')
 
 def main():
-    print('どの週のユーザを集計しますか？(月曜日の日付を入力してください)')
-    year = int(input('year: '))
-    month = int(input('month: '))
-    day = int(input('day: '))
-    weeklyDownloads(year, month, day)
+    isWeeklyCount = cf.answeredYes('y = 週ごとのユーザ数を集計, n = uidから年齢')
+    if isWeeklyCount:
+        print('どの週のユーザを集計しますか？(月曜日の日付を入力してください)')
+        year = int(input('year: '))
+        month = int(input('month: '))
+        day = int(input('day: '))
+        weeklyDownloads(year, month, day)
+    else:
+        print('年齢を取得したいuidは？')
+        uid = input('uid: ')
+        birthday = ToFireStore.fetchUserBirthdayByUids(uid)
+        if birthday == None:
+            print('誕生日が取得できませんでした')
+            return
+        age = calculateAge(birthday)
+        print(f'{age}歳')
 
 if __name__ == '__main__':
     main()
