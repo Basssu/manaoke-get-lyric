@@ -55,10 +55,7 @@ def sendNotificationToCelebrityLikers(
     id: Optional[str] = None,
     ):
     CelebrityDocDict = ToFireStore.fetchDocbyCollectionNameAndDocumentId("celebrities", celebrityId).to_dict()
-    if CelebrityDocDict == None or not 'likedBy' in CelebrityDocDict or CelebrityDocDict['likedBy'] == None:
-        print(f'celebrities/{celebrityId} のlikedByをうまく取得できませんでした。')
-        return
-    likedBy = CelebrityDocDict['likedBy']
+    likedBy = ToFireStore.celebrityLikerUids(celebrityId)
     uids = uidsToSendNotification(likedBy, category)
     deviceTokens = uidsToDeviceTokens(uids)
     if body == None:
