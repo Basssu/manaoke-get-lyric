@@ -31,6 +31,9 @@ def likeCelebrityByUids(uids: list[str], celebrityId: str):
     return
 
 def likeCelebrityByUid(uid: str, celebrityId: str):
+    if not userExists(uid):
+        print(f'ユーザー {uid} は存在しません')
+        return
     if isAlreadyLiked(uid, celebrityId):
         print(f'すでに {uid} は {celebrityId} をlikeしています')
         return
@@ -48,6 +51,11 @@ def isAlreadyLiked(uid: str, celebrityId: str) -> bool:
     query = likedCelebritiesRef.where('celebrityId', '==', celebrityId).limit(1)
     docs = query.get()
     return len(docs) != 0
+
+def userExists(uid: str) -> bool:
+    db = firestore.client()
+    userDoc = db.collection('users').document(uid).get()
+    return userDoc.exists
 
 
 def main():
