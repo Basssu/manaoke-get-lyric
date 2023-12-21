@@ -55,6 +55,16 @@ def deleteKeysFromDict(dict: dict, keys: list[str]):
             del dict[key]
     return dict
 
+def celebrityLikerUids(celebrityId: str) -> list[str]:
+    if not firebase_admin._apps:
+        cf.initializeFirebase(cf.getFlavor())
+    db = firestore.client()
+    celebrityDocs = db.collection_group('likedCelebrities').where('celebrityId', '==', celebrityId).get()
+    uids = []
+    for celebrityDoc in celebrityDocs:
+        uids.append(celebrityDoc.reference.parent.parent.id)
+    return list(set(uids)) #重複削除(念の為)
+
 def completedVideos(youtubeVideoIds: list[str]) -> list[str]:
     result = []
     for youtubeVideoId in youtubeVideoIds:
