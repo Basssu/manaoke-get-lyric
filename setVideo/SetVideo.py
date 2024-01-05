@@ -122,7 +122,7 @@ def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) 
     return koreanCaptions, japaneseCaptions
 
 
-def filter_captions(mainCaptions, subCaptions):
+def filter_captions(mainCaptions, subCaptions): # mainCaptionsとsubCaptionsどちらかしかない時間帯の字幕を削除する。ここで、すべての字幕のstartとendは同じになる。
     filtered_main_captions = []
     filtered_sub_captions = []
 
