@@ -111,7 +111,7 @@ def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) 
         
     koreanCaptions, japaneseCaptions = filter_captions(koreanCaptions, japaneseCaptions)
     koreanCaptions, japaneseCaptions = deleteOverlappedCaptions(koreanCaptions, japaneseCaptions)
-        
+    
     for i in range(len(koreanCaptions)):
         koreanCaptions[i]['duration'] = koreanCaptions[i]['end'] - koreanCaptions[i]['start']
         koreanCaptions[i].pop('end')
@@ -211,6 +211,8 @@ def captionConnectedCount(mainCaptions: list[dict], subCaptions: list[dict], i: 
     while True:
         count = 0
         while True:
+            if i + overlapCount + count >= len(mainCaptions) - 1:
+                return overlapCount
             if mainCaptions[i + overlapCount - 1 + count]['text'] == mainCaptions[i + overlapCount+ count]['text']:
                 overlapCount = overlapCount + 1
                 count = count + 1
@@ -223,6 +225,8 @@ def captionConnectedCount(mainCaptions: list[dict], subCaptions: list[dict], i: 
                 break
         count = 0
         while True:
+            if i + overlapCount + count >= len(mainCaptions) - 1:
+                return overlapCount
             if subCaptions[i + overlapCount - 1 + count]['text'] == subCaptions[i + overlapCount + count]['text']:
                 overlapCount = overlapCount + 1
                 count = count + 1
