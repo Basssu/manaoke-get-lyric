@@ -83,8 +83,9 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
             videoId,
             languages=['ja'],
             )
-        koreanCaptions = deleteIfOneCaptionNotExist(koreanCaptions, japaneseCaptions)
-        japaneseCaptions = deleteIfOneCaptionNotExist(japaneseCaptions, koreanCaptions)
+
+        koreanCaptions, japaneseCaptions = makeValidCaptions(koreanCaptions, japaneseCaptions)
+
         if not cf.answeredYes(f'{videoId}:字幕の行数は{len(koreanCaptions)}行です。続けますか？'):
             return False
         jsonData = CaptionsToJson.captionsToJson(koreanCaptions, japaneseCaptions)
@@ -100,14 +101,138 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
 
     return True
 
-def deleteIfOneCaptionNotExist(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:
-    captions = []
-    for mainCaption in mainCaptions:
-        for subCaption in subCaptions:
-            if mainCaption['start'] == subCaption['start'] and mainCaption['duration'] == subCaption['duration']:
-                captions.append(mainCaption)
+def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) -> list[dict]:
+    for i in range(len(koreanCaptions)):
+            koreanCaptions[i]['end'] = koreanCaptions[i]['start'] + koreanCaptions[i]['duration']
+            koreanCaptions[i].pop('duration')
+    for i in range(len(japaneseCaptions)):
+        japaneseCaptions[i]['end'] = japaneseCaptions[i]['start'] + japaneseCaptions[i]['duration']
+        japaneseCaptions[i].pop('duration')
+        
+    koreanCaptions, japaneseCaptions = filter_captions(koreanCaptions, japaneseCaptions)
+    koreanCaptions, japaneseCaptions = deleteOverlappedCaptions(koreanCaptions, japaneseCaptions)
+        
+    for i in range(len(koreanCaptions)):
+        koreanCaptions[i]['duration'] = koreanCaptions[i]['end'] - koreanCaptions[i]['start']
+        koreanCaptions[i].pop('end')
+    for i in range(len(japaneseCaptions)):
+        japaneseCaptions[i]['duration'] = japaneseCaptions[i]['end'] - japaneseCaptions[i]['start']
+        japaneseCaptions[i].pop('end')
+        
+    return koreanCaptions, japaneseCaptions
+
+
+def filter_captions(mainCaptions, subCaptions):
+    filtered_main_captions = []
+    filtered_sub_captions = []
+
+    for main_caption in mainCaptions:
+        for sub_caption in subCaptions:
+            start_time = max(main_caption['start'], sub_caption['start'])
+            end_time = min(main_caption['end'], sub_caption['end'])
+            
+            if start_time < end_time:
+                filtered_main_captions.append({
+                    'text': main_caption['text'],
+                    'start': start_time,
+                    'end': end_time
+                })
+
+                filtered_sub_captions.append({
+                    'text': sub_caption['text'],
+                    'start': start_time,
+                    'end': end_time
+                })
+
+    return filtered_main_captions, filtered_sub_captions
+
+def deleteOverlappedCaptions(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:
+    while True:
+        for i in range(len(mainCaptions)):
+            foundError = False
+            if i == len(mainCaptions) - 1:
                 break
-    return captions
+            if mainCaptions[i]['text'] == mainCaptions[i + 1]['text'] or subCaptions[i]['text'] == subCaptions[i + 1]['text']:
+                foundError = True
+                if mainCaptions[i]['text'] == mainCaptions[i + 1]['text']:
+                    chainCount = captionConnectedCount(mainCaptions, subCaptions, i)
+                    mainCaptionsTextList = []
+                    for j in range(chainCount):
+                        mainCaptionsTextList.append(mainCaptions[i + j]['text'])
+                    mainCaptionsTextList = list(dict.fromkeys(mainCaptionsTextList))
+                    mainCaptionText = ' '.join(mainCaptionsTextList)
+                    
+                    subCaptionsTextList = []
+                    for j in range(chainCount):
+                        subCaptionsTextList.append(subCaptions[i + j]['text'])
+                    subCaptionsTextList = list(dict.fromkeys(subCaptionsTextList))
+                    subCaptionText = ' '.join(subCaptionsTextList)
+                    
+                    endTime = mainCaptions[i + chainCount - 1]['end']
+                    mainCaptions[i]['text'] = mainCaptionText
+                    subCaptions[i]['text'] = subCaptionText
+                    mainCaptions[i]['end'] = endTime
+                    subCaptions[i]['end'] = endTime
+                    del mainCaptions[i + 1:i + chainCount]
+                    del subCaptions[i + 1:i + chainCount]
+                    break
+                
+                if subCaptions[i]['text'] == subCaptions[i + 1]['text']:
+                    chainCount = captionConnectedCount(subCaptions, mainCaptions, i)
+                    subCaptionsTextList = []
+                    for j in range(chainCount):
+                        subCaptionsTextList.append(subCaptions[i + j]['text'])
+                    subCaptionsTextList = list(dict.fromkeys(subCaptionsTextList))
+                    subCaptionText = ' '.join(subCaptionsTextList)
+                    
+                    mainCaptionsTextList = []
+                    for j in range(chainCount):
+                        mainCaptionsTextList.append(mainCaptions[i + j]['text'])
+                    mainCaptionsTextList = list(dict.fromkeys(mainCaptionsTextList))
+                    
+                    mainCaptionText = ' '.join(mainCaptionsTextList)
+                    
+                    endTime = subCaptions[i + chainCount - 1]['end']
+                    subCaptions[i]['text'] = subCaptionText
+                    mainCaptions[i]['text'] = mainCaptionText
+                    subCaptions[i]['end'] = endTime
+                    mainCaptions[i]['end'] = endTime
+                    del subCaptions[i + 1:i + chainCount]
+                    del mainCaptions[i + 1:i + chainCount]
+                    break
+                    
+        if not foundError:
+            break
+    return mainCaptions, subCaptions
+
+def captionConnectedCount(mainCaptions: list[dict], subCaptions: list[dict], i: int):
+    reachToFinish = False
+    overlapCount = 1
+    while True:
+        count = 0
+        while True:
+            if mainCaptions[i + overlapCount - 1 + count]['text'] == mainCaptions[i + overlapCount+ count]['text']:
+                overlapCount = overlapCount + 1
+                count = count + 1
+                reachToFinish = False
+            else:
+                if count == 0:
+                    if reachToFinish:
+                        return overlapCount
+                    reachToFinish = True
+                break
+        count = 0
+        while True:
+            if subCaptions[i + overlapCount - 1 + count]['text'] == subCaptions[i + overlapCount + count]['text']:
+                overlapCount = overlapCount + 1
+                count = count + 1
+                reachToFinish = False
+            else:
+                if count == 0:
+                    if reachToFinish:
+                        return overlapCount
+                    reachToFinish = True
+                break
 
 def convertCaptionsToUncompletedJson(koreanCaptions: Optional[list], japaneseCaptions: Optional[list],) -> dict:
     jsonData = []
