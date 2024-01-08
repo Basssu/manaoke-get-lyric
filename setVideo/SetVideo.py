@@ -7,6 +7,7 @@ import ToFireStore
 import pprint
 from typing import Optional, Tuple
 import Notification
+import NewToStorage
 
 # ビデオIDを入力する
 def inputVideoIds() -> list[str]:
@@ -44,6 +45,7 @@ def checkCaptionAvailability(videoId: str) -> list[str]:
 
 def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bool: #返り値は、この動画が追加されたかどうか(true: 正常に追加された, false: 追加されなかった)
     availableLanguages = checkCaptionAvailability(videoId)
+    captionJsonUrl = None
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
@@ -61,6 +63,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         uncompletedJsonData = convertCaptionsToUncompletedJson(koreanCaptions, None)
         # jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
+        captionJsonUrl = getCaptionJsonUrl(f'ko_ja_{videoId}', koreanCaptions, None)
     
     if availableLanguages == ['ja']: # 韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語字幕があります")
@@ -72,6 +75,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
         if (not isNonStop and cf.answeredYes('この動画をスキップしますか？')) or firestoreMap == None: return False
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
+        captionJsonUrl = getCaptionJsonUrl(f'ko_ja_{videoId}', None, japaneseCaptions)
     
     if 'ja' in availableLanguages and 'ko' in availableLanguages: # 日本語・韓国語字幕がある場合
         print(f"{videoId}: この動画には日本語・韓国語字幕があります")
@@ -95,11 +99,37 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
         if (not isNonStop and cf.answeredYes('この動画をスキップしますか？')) or firestoreMap == None: return False
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
-    
-    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages)
+        captionJsonUrl = getCaptionJsonUrl(f'ko_ja_{videoId}', koreanCaptions, japaneseCaptions)
+        
+    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages, captionJsonUrl)
     pprint.pprint(document) #Firestoreにアップロードした内容
 
     return True
+
+def getCaptionJsonUrl(videoId: str, mainCaptions: Optional[list[dict]], subCaptions: Optional[list[dict]]) -> str:
+    data = makeCaptionDictList(mainCaptions, subCaptions)
+    url = NewToStorage.newJsonUrl(videoId, data)
+    return url
+
+def makeCaptionDictList(mainCaptions: Optional[list[dict]], subCaptions: Optional[list[dict]]) -> list[dict]:
+    captionDictList = []
+    captionsLength = 0
+    if mainCaptions != None:
+        captionsLength = len(mainCaptions)
+    else:
+        captionsLength = len(subCaptions)
+    for i in range(captionsLength):
+        captionDict = {}
+        if mainCaptions != None:
+            captionDict['time'] = CaptionsToJson.convertTimeToSrtFormat(mainCaptions[i]['start'], mainCaptions[i]['duration'])
+        else:
+            captionDict['time'] = CaptionsToJson.convertTimeToSrtFormat(subCaptions[i]['start'], subCaptions[i]['duration'])
+        if mainCaptions != None:
+            captionDict['from'] = mainCaptions[i]['text'].replace('\n', ' ')
+        if subCaptions != None:
+            captionDict['to'] = subCaptions[i]['text'].replace('\n', ' ')
+        captionDictList.append(captionDict)
+    return captionDictList
 
 def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) -> list[dict]:
     for i in range(len(koreanCaptions)):
@@ -120,7 +150,6 @@ def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) 
         japaneseCaptions[i].pop('end')
         
     return koreanCaptions, japaneseCaptions
-
 
 def filter_captions(mainCaptions, subCaptions): # mainCaptionsとsubCaptionsどちらかしかない時間帯の字幕を削除する。ここで、すべての字幕のstartとendは同じになる。
     filtered_main_captions = []

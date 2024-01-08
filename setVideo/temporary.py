@@ -2,60 +2,120 @@ from firebase_admin import firestore
 import firebase_admin
 import ConvenientFunctions as cf
 import datetime
+import urllib.request
+from typing import Optional
+import json
+import ToFireStore
+import NewToStorage
+
+videosDir = 'videos'
+jsonFileName = 'caption.json'
+lastVideoId = None
+
+def getVideoDocById() -> Optional[firestore.DocumentSnapshot]:
+    if not firebase_admin._apps:
+        cf.initializeFirebase(cf.getFlavor())
+    db = firestore.client()
+    doc = db.collection('videos').document(lastVideoId).get()
+    if doc.exists:
+        return doc
+    else:
+        return None
 
 def do():
     if not firebase_admin._apps:
         cf.initializeFirebase(cf.getFlavor())
-    lastDoc = None
+    lastDoc = getVideoDocById()
     db = firestore.client()
-    query = db.collection('celebrities').order_by('popularity').limit(1)
-    while 1:
+    query = db.collection('videos').order_by('publishedAt').limit(1)
+    count = 0
+    while True:
+        print(f'count: {count}')
+        count = count + 1
         if lastDoc == None:
             docs = query.get()
         else:
             docs = query.start_after(lastDoc).get()
         if len(docs) == 0:
             break
-        celebrityId = docs[0].reference.id
-        print(f'処理中のcelebrityId: {celebrityId}')
-        celebrity = docs[0].to_dict()
+        videoId = docs[0].reference.id
+        print(f'処理中のvideoId: {videoId}')
+        video = docs[0].to_dict()
+        video['id'] = videoId
         lastDoc = docs[0]
-        if celebrity['likedBy'] != None:
-            likeCelebrityByUids(celebrity['likedBy'], celebrityId)
+        serCaptionJsonUrl(video)
     return
 
-def likeCelebrityByUids(uids: list[str], celebrityId: str):
-    db = firestore.client()
-    for uid in uids:
-        likeCelebrityByUid(uid, celebrityId)
-    return
-
-def likeCelebrityByUid(uid: str, celebrityId: str):
-    if not userExists(uid):
-        print(f'ユーザー {uid} は存在しません')
+def serCaptionJsonUrl(video: dict):
+    isUncompletedVideo = video.get('isUncompletedVideo')
+    uncompletedJsonUrl = video.get('uncompletedJsonUrl')
+    jsonUrl = video.get('jsonUrl')
+    videoId = video.get('id')
+    newCaptionDictList: Optional[list[dict]] = None
+    if isUncompletedVideo == False:
+        if jsonUrl == None:
+            print(f'jsonUrlがありませんでした。videoId: {videoId}')
+            return
+        response = urllib.request.urlopen(jsonUrl)
+        oldCaptionDictList: list[dict] = json.loads(response.read().decode())
+        newCaptionDictList = toNewDictListFromCompleted(oldCaptionDictList)
+    
+    elif isUncompletedVideo == True:
+        if uncompletedJsonUrl == None:
+            return
+        else:
+            response = urllib.request.urlopen(uncompletedJsonUrl)
+            oldCaptionDictList: list[dict] = json.loads(response.read().decode())
+            newCaptionDictList = toNewDictListFromUncompleted(oldCaptionDictList)
+            
+    else:
+        print(f'isUncompletedVideoがnullです。videoId: {videoId}')
         return
-    if isAlreadyLiked(uid, celebrityId):
-        print(f'すでに {uid} は {celebrityId} をlikeしています')
+    if newCaptionDictList == None:
+        print(f'newCaptionDictListがnullです。videoId: {videoId}')
         return
-    db = firestore.client()
-    likedCelebritiesRef = db.collection('users').document(uid).collection('likedCelebrities')
-    likedCelebritiesRef.add({
-        'celebrityId': celebrityId,
-        'likedAt': datetime.datetime.now(),
-    })
+    
+    url = NewToStorage.newJsonUrl(videoId, newCaptionDictList)
+    ToFireStore.afterReview(
+        {
+            'captionJsonUrl': url,
+        },
+        videoId,
+    )
+        
     return
 
-def isAlreadyLiked(uid: str, celebrityId: str) -> bool:
-    db = firestore.client()
-    likedCelebritiesRef = db.collection('users').document(uid).collection('likedCelebrities')
-    query = likedCelebritiesRef.where('celebrityId', '==', celebrityId).limit(1)
-    docs = query.get()
-    return len(docs) != 0
+def toNewDictListFromCompleted(oldCaptionDictList: list[dict]) -> list[dict]:
+    newCaptionDictList = []
+    for oldCaptionDict in oldCaptionDictList:
+        koList = []
+        for detail in oldCaptionDict['detail']:
+            koList.append(detail['actualLyric'])
+        ko = ' '.join(koList)
+        newCaptionDict = {
+            'time': oldCaptionDict['time'],
+            'from': ko,
+            'to': oldCaptionDict['fullMeaning'],
+        }
+        newCaptionDictList.append(newCaptionDict)
+    return newCaptionDictList
 
-def userExists(uid: str) -> bool:
-    db = firestore.client()
-    userDoc = db.collection('users').document(uid).get()
-    return userDoc.exists
+def toNewDictListFromUncompleted(oldCaptionDictList: list[dict]) -> list[dict]:
+    newCaptionDictList = []
+    for oldCaptionDict in oldCaptionDictList:
+        ko = oldCaptionDict.get('ko')
+        ja = oldCaptionDict.get('ja')
+        time = oldCaptionDict.get('time')
+        newCaptionDict = {
+            'time': time,
+        }
+        if ko != None:
+            newCaptionDict['from'] = ko
+        if ja != None:
+            newCaptionDict['to'] = ja
+        newCaptionDictList.append(newCaptionDict)
+    return newCaptionDictList
+
 
 
 def main():

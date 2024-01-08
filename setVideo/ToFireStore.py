@@ -11,6 +11,7 @@ def toFirestore(
         flavor: str, 
         documentId: str,
         availableCaptionLanguages: str,
+        captionJsonUrl: Optional[str],
         ):
     if not firebase_admin._apps:
         cf.firebaseInitialize(flavor)
@@ -21,6 +22,10 @@ def toFirestore(
         firestoreDict["uncompletedJsonUrl"] = storageUrl
     elif 'ja' in availableCaptionLanguages and 'ko' in availableCaptionLanguages:
         firestoreDict["jsonUrl"] = storageUrl
+    print('captionJsonUrl')
+    print(captionJsonUrl)
+    if captionJsonUrl != None:
+        firestoreDict["captionJsonUrl"] = captionJsonUrl
         
     doc_ref = db.collection('videos').document(documentId)
     # ドキュメントの存在を確認
