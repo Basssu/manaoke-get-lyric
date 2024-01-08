@@ -140,7 +140,12 @@ def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) 
         japaneseCaptions[i].pop('duration')
         
     koreanCaptions, japaneseCaptions = filter_captions(koreanCaptions, japaneseCaptions)
+    koreanCaptions, japaneseCaptions = deleteGap(koreanCaptions, japaneseCaptions)
     koreanCaptions, japaneseCaptions = deleteOverlappedCaptions(koreanCaptions, japaneseCaptions)
+    for i in range(len(koreanCaptions)):
+        print('\n')
+        print(koreanCaptions[i])
+        print(japaneseCaptions[i])
     
     for i in range(len(koreanCaptions)):
         koreanCaptions[i]['duration'] = koreanCaptions[i]['end'] - koreanCaptions[i]['start']
@@ -174,6 +179,32 @@ def filter_captions(mainCaptions, subCaptions): # mainCaptionsとsubCaptionsど�
                 })
 
     return filtered_main_captions, filtered_sub_captions
+
+def deleteGap(mainCaptions: list[dict], subCaptions: list[dict]):
+    # mainCaptionsとsubCaptionsのstartとendが同じという前提
+    # mainCaptionsとsubCaptionsの長さが同じという前提
+    # enumerateを使用してリストの要素とインデックスを同時に取得
+    mainCaptions = [caption for i, caption in enumerate(mainCaptions) if abs(caption['end'] - caption['start']) > 0.1]
+    subCaptions = [caption for i, caption in enumerate(subCaptions) if abs(caption['end'] - caption['start']) > 0.1]
+    
+    mainCaptions = list(map(roundCaption,mainCaptions))
+    subCaptions = list(map(roundCaption,subCaptions))
+    
+    # そのendの値が次のstartと同じか大きい場合、そのendの値を次のstartより0.001秒小さくする。ただし、startよりendが小さくなってはならない。
+    for i in range(len(mainCaptions)):
+        if i == len(mainCaptions) - 1:
+            break
+        if mainCaptions[i]['end'] >= mainCaptions[i + 1]['start'] and mainCaptions[i]['end'] - 0.001 > mainCaptions[i]['start']:
+            mainCaptions[i]['end'] = round(mainCaptions[i + 1]['start'] - 0.001, 3)
+            subCaptions[i]['end'] = round(subCaptions[i + 1]['start'] - 0.001, 3)
+    return mainCaptions, subCaptions
+
+def roundCaption(caption: dict):
+    return {
+        'text': caption['text'],
+        'start': round(caption['start'], 3),
+        'end': round(caption['end'], 3)
+    }
 
 def deleteOverlappedCaptions(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:
     while True:
@@ -240,7 +271,7 @@ def captionConnectedCount(mainCaptions: list[dict], subCaptions: list[dict], i: 
     while True:
         count = 0
         while True:
-            if i + overlapCount + count >= len(mainCaptions) - 1:
+            if i + overlapCount + count >= len(mainCaptions):
                 return overlapCount
             if mainCaptions[i + overlapCount - 1 + count]['text'] == mainCaptions[i + overlapCount+ count]['text']:
                 overlapCount = overlapCount + 1
@@ -254,7 +285,7 @@ def captionConnectedCount(mainCaptions: list[dict], subCaptions: list[dict], i: 
                 break
         count = 0
         while True:
-            if i + overlapCount + count >= len(mainCaptions) - 1:
+            if i + overlapCount + count >= len(mainCaptions):
                 return overlapCount
             if subCaptions[i + overlapCount - 1 + count]['text'] == subCaptions[i + overlapCount + count]['text']:
                 overlapCount = overlapCount + 1
