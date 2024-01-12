@@ -88,7 +88,9 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
             languages=['ja'],
             )
 
-        koreanCaptions, japaneseCaptions = makeValidCaptions(koreanCaptions, japaneseCaptions)
+        # koreanCaptions, japaneseCaptions = makeValidCaptions(koreanCaptions, japaneseCaptions)
+        koreanCaptions = deleteIfOneCaptionNotExist(koreanCaptions, japaneseCaptions)
+        japaneseCaptions = deleteIfOneCaptionNotExist(japaneseCaptions, koreanCaptions)
 
         if not cf.answeredYes(f'{videoId}:字幕の行数は{len(koreanCaptions)}行です。続けますか？'):
             return False
@@ -105,6 +107,15 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
     pprint.pprint(document) #Firestoreにアップロードした内容
 
     return True
+
+def deleteIfOneCaptionNotExist(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:
+    captions = []
+    for mainCaption in mainCaptions:
+        for subCaption in subCaptions:
+            if mainCaption['start'] == subCaption['start'] and mainCaption['duration'] == subCaption['duration']:
+                captions.append(mainCaption)
+                break
+    return captions
 
 def getCaptionJsonUrl(videoId: str, mainCaptions: Optional[list[dict]], subCaptions: Optional[list[dict]]) -> str:
     data = makeCaptionDictList(mainCaptions, subCaptions)

@@ -9,6 +9,7 @@ def deleteVideosFromFirebase(videoIds: list[str], flavor: str):
 def deleteVideoFromFirebase(videoId: str, flavor: str):
     deleteDocumentFromFirebase('videos', videoId, willDeleteSubcollections=True)
     deleteFromFirebaseStorage(f'videos/{videoId}/allData.json', flavor)
+    deleteFromFirebaseStorage(f'videos/{videoId}/caption.json', flavor)
     deleteFromFirebaseStorage(f'uncompletedVideos/{videoId}/caption.json', flavor)
 
 def deleteDocumentFromFirebase(
