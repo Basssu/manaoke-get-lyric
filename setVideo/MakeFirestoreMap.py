@@ -49,10 +49,11 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "channelId": channelId,
             "channelTitle": channelTitle,
             "createdAt": datetime.datetime.now(pytz.timezone('Asia/Tokyo')),
-            "defaultAudioLanguage": defaultAudioLanguage,
             "durationInMilliseconds": durationInMilliseconds,
             "hasTranslationAfterSubtitles": 'ja' in captionLanguages,
             "hasTranslationBeforeSubtitles": 'ko' in captionLanguages,
+            "isCaptionFromModified": False, #仮
+            "isCaptionToModified": False, #仮
             "isInvisible": durationInMilliseconds < 60000,
             "isPremium": False,
             "isUncompletedVideo": isGonneBeUncompletedVideo,
