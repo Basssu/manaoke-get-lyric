@@ -15,32 +15,34 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 import re
 
-tokenList = []
-def loop(selectedText):
+def loop(selectedText) -> list[str]:
+    tokenList = []
     for i in range(len(selectedText)):
         token = selectedText[0:i + 1]
         if token not in tokenList:
             tokenList.append(token)
+    return tokenList
 
-def makeTokenList(title):
-    ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
+def makeTokenList(title) -> list[str]:
     tokenList = []
+    ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
     titleWithoutKakko = remove_parentheses(title)
     print(titleWithoutKakko)
     insideKakko = []
     if title != titleWithoutKakko and title.count("(") == 1 and title.count(")") == 1:
         insideKakko = title[title.find("(")+1:title.find(")")]
         if not any((a in insideKakko) for a in ngList):
-            loop(insideKakko)
-            loop(insideKakko.upper())
-            loop(insideKakko.lower())
-            loop(insideKakko.capitalize())
+            tokenList.extend(loop(insideKakko))
+            tokenList.extend(loop(insideKakko.upper()))
+            tokenList.extend(loop(insideKakko.lower()))
+            tokenList.extend(loop(insideKakko.capitalize()))
 
-    loop(titleWithoutKakko)
-    loop(titleWithoutKakko.upper())
-    loop(titleWithoutKakko.lower())
-    loop(titleWithoutKakko.capitalize())
-
+    tokenList.extend(loop(titleWithoutKakko))
+    tokenList.extend(loop(titleWithoutKakko.upper()))
+    tokenList.extend(loop(titleWithoutKakko.lower()))
+    tokenList.extend(loop(titleWithoutKakko.capitalize()))
+    
+    return list(dict.fromkeys(tokenList))
 
 def remove_parentheses(string):
     # 括弧とその中身を含む正規表現パターンを定義する
@@ -108,8 +110,7 @@ with open(f'videos/{video_id}/firestore.json', 'w') as f:
 firestoreDict["publishedAt"] = publishedAtDatetime
 firestoreDict["updatedAt"] = datetime.datetime.now()
 if firestoreDict["category"] == "music":
-    makeTokenList(firestoreDict["title"])
-    firestoreDict["tokenList"] = tokenList
+    firestoreDict["tokenList"] = makeTokenList(firestoreDict["title"])
 db= firestore.client()
 doc_ref = db.collection('videos').document(documentId)
 
