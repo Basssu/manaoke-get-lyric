@@ -2,13 +2,8 @@ import firebase_admin
 from firebase_admin import firestore
 from googleapiclient.discovery import build
 import ConvenientFunctions as cf
-import CaptionsToJson
-import ToStorage
 import ToFireStore
-import urllib.request
-import json
 import Notification
-from typing import Optional
 
 def makeFirebaseClient(flavor: str):
     creds = cf.firebaseCreds(flavor)
@@ -28,49 +23,22 @@ def setJson(documentId: str, flavor: str):
     videoDocDict = videoDoc.to_dict()
     isUncompletedVideo = videoDocDict.get('isUncompletedVideo')
     isWaitingForReview = videoDocDict.get('isWaitingForReview')
-    uncompletedJsonUrl = videoDocDict.get('uncompletedJsonUrl')
     captionSubmitterUid = videoDocDict.get('captionSubmitterUid')
     # category = videoDocDict.get('category')
     # celebrityIds = videoDocDict.get('celebrityIds')
     # playlistIds = videoDocDict.get('playlistIds')
     # title = videoDocDict.get('title')
-    if isUncompletedVideo != True or isWaitingForReview != True or uncompletedJsonUrl == None or captionSubmitterUid == None:
+    if isUncompletedVideo != True or isWaitingForReview != True or captionSubmitterUid == None:
         print('この動画は承認作業ができません')
         print('isUncompletedVideo: ' + str(isUncompletedVideo))
         print('isWaitingForReview: ' + str(isWaitingForReview))
-        print('uncompletedJsonUrl: ' + str(uncompletedJsonUrl))
         print('captionSubmitterUid: ' + str(captionSubmitterUid))
         return
-    response = urllib.request.urlopen(uncompletedJsonUrl)
-    uncompletedDictList: list[dict] = json.loads(response.read().decode())
-    koreanCaptions = []
-    japaneseCaptions = []
-    hasJapaneseCaptions = len(uncompletedDictList) != 0 and uncompletedDictList[0]['ja'] != None
-    for oneLine in uncompletedDictList:
-        koreanCaptions.append({
-            'time': oneLine['time'],
-            'text': oneLine['ko'],
-        })
-        if hasJapaneseCaptions:
-            japaneseCaptions.append({
-                'time': oneLine['time'],
-                'text': oneLine['ja'],
-            })
-    jsonData = CaptionsToJson.captionsToJson(
-        koreanCaptions = koreanCaptions, 
-        japaneseCaptions = japaneseCaptions,
-        hasStrTime = True)
-    url = ToStorage.toStorage(
-        documentId = documentId,
-        flavor = flavor,
-        data = jsonData,
-        availableCaptionLanguages = ['ko', 'ja'],
-    )
     ToFireStore.afterReview(
         {
             'isUncompletedVideo': False,
+            'isVerified': True,
             'isWaitingForReview': False,
-            'jsonUrl': url,
         },
         documentId,
     )

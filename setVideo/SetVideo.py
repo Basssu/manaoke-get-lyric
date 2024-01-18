@@ -7,6 +7,7 @@ import ToFireStore
 import pprint
 from typing import Optional, Tuple
 import Notification
+import NewToStorage
 
 # ビデオIDを入力する
 def inputVideoIds() -> list[str]:
@@ -44,6 +45,7 @@ def checkCaptionAvailability(videoId: str) -> list[str]:
 
 def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bool: #返り値は、この動画が追加されたかどうか(true: 正常に追加された, false: 追加されなかった)
     availableLanguages = checkCaptionAvailability(videoId)
+    captionJsonUrl = None
     if availableLanguages == []: # 日本語・韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語・韓国語字幕どちらもありません")
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
@@ -61,6 +63,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         uncompletedJsonData = convertCaptionsToUncompletedJson(koreanCaptions, None)
         # jsonData = CaptionsToJson.captionsToJson(koreanCaptions, None)
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
+        captionJsonUrl = getCaptionJsonUrl(f'ko_ja_{videoId}', koreanCaptions, None)
     
     if availableLanguages == ['ja']: # 韓国語字幕がない場合
         print(f"{videoId}: この動画には日本語字幕があります")
@@ -72,6 +75,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, True, availableLanguages)
         if (not isNonStop and cf.answeredYes('この動画をスキップしますか？')) or firestoreMap == None: return False
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, uncompletedJsonData, availableLanguages)
+        captionJsonUrl = getCaptionJsonUrl(f'ko_ja_{videoId}', None, japaneseCaptions)
     
     if 'ja' in availableLanguages and 'ko' in availableLanguages: # 日本語・韓国語字幕がある場合
         print(f"{videoId}: この動画には日本語・韓国語字幕があります")
@@ -84,7 +88,9 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
             languages=['ja'],
             )
 
-        koreanCaptions, japaneseCaptions = makeValidCaptions(koreanCaptions, japaneseCaptions)
+        # koreanCaptions, japaneseCaptions = makeValidCaptions(koreanCaptions, japaneseCaptions)
+        koreanCaptions = deleteIfOneCaptionNotExist(koreanCaptions, japaneseCaptions)
+        japaneseCaptions = deleteIfOneCaptionNotExist(japaneseCaptions, koreanCaptions)
 
         if not cf.answeredYes(f'{videoId}:字幕の行数は{len(koreanCaptions)}行です。続けますか？'):
             return False
@@ -95,11 +101,46 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         firestoreMap = MakeFirestoreMap.makeFirestoreMap(videoId, policy, False, availableLanguages)
         if (not isNonStop and cf.answeredYes('この動画をスキップしますか？')) or firestoreMap == None: return False
         url = ToStorage.toStorage(f'ko_ja_{videoId}', flavor, jsonData, availableLanguages)
-    
-    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages)
+        captionJsonUrl = getCaptionJsonUrl(f'ko_ja_{videoId}', koreanCaptions, japaneseCaptions)
+        
+    document = ToFireStore.toFirestore(firestoreMap, url, flavor, f'ko_ja_{videoId}', availableLanguages, captionJsonUrl)
     pprint.pprint(document) #Firestoreにアップロードした内容
 
     return True
+
+def deleteIfOneCaptionNotExist(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:
+    captions = []
+    for mainCaption in mainCaptions:
+        for subCaption in subCaptions:
+            if mainCaption['start'] == subCaption['start'] and mainCaption['duration'] == subCaption['duration']:
+                captions.append(mainCaption)
+                break
+    return captions
+
+def getCaptionJsonUrl(videoId: str, mainCaptions: Optional[list[dict]], subCaptions: Optional[list[dict]]) -> str:
+    data = makeCaptionDictList(mainCaptions, subCaptions)
+    url = NewToStorage.newJsonUrl(videoId, data)
+    return url
+
+def makeCaptionDictList(mainCaptions: Optional[list[dict]], subCaptions: Optional[list[dict]]) -> list[dict]:
+    captionDictList = []
+    captionsLength = 0
+    if mainCaptions != None:
+        captionsLength = len(mainCaptions)
+    else:
+        captionsLength = len(subCaptions)
+    for i in range(captionsLength):
+        captionDict = {}
+        if mainCaptions != None:
+            captionDict['time'] = CaptionsToJson.convertTimeToSrtFormat(mainCaptions[i]['start'], mainCaptions[i]['duration'])
+        else:
+            captionDict['time'] = CaptionsToJson.convertTimeToSrtFormat(subCaptions[i]['start'], subCaptions[i]['duration'])
+        if mainCaptions != None:
+            captionDict['from'] = mainCaptions[i]['text'].replace('\n', ' ')
+        if subCaptions != None:
+            captionDict['to'] = subCaptions[i]['text'].replace('\n', ' ')
+        captionDictList.append(captionDict)
+    return captionDictList
 
 def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) -> list[dict]:
     for i in range(len(koreanCaptions)):
@@ -110,7 +151,12 @@ def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) 
         japaneseCaptions[i].pop('duration')
         
     koreanCaptions, japaneseCaptions = filter_captions(koreanCaptions, japaneseCaptions)
+    koreanCaptions, japaneseCaptions = deleteGap(koreanCaptions, japaneseCaptions)
     koreanCaptions, japaneseCaptions = deleteOverlappedCaptions(koreanCaptions, japaneseCaptions)
+    for i in range(len(koreanCaptions)):
+        print('\n')
+        print(koreanCaptions[i])
+        print(japaneseCaptions[i])
     
     for i in range(len(koreanCaptions)):
         koreanCaptions[i]['duration'] = koreanCaptions[i]['end'] - koreanCaptions[i]['start']
@@ -120,7 +166,6 @@ def makeValidCaptions(koreanCaptions: list[dict], japaneseCaptions: list[dict]) 
         japaneseCaptions[i].pop('end')
         
     return koreanCaptions, japaneseCaptions
-
 
 def filter_captions(mainCaptions, subCaptions): # mainCaptionsとsubCaptionsどちらかしかない時間帯の字幕を削除する。ここで、すべての字幕のstartとendは同じになる。
     filtered_main_captions = []
@@ -145,6 +190,32 @@ def filter_captions(mainCaptions, subCaptions): # mainCaptionsとsubCaptionsど�
                 })
 
     return filtered_main_captions, filtered_sub_captions
+
+def deleteGap(mainCaptions: list[dict], subCaptions: list[dict]):
+    # mainCaptionsとsubCaptionsのstartとendが同じという前提
+    # mainCaptionsとsubCaptionsの長さが同じという前提
+    # enumerateを使用してリストの要素とインデックスを同時に取得
+    mainCaptions = [caption for i, caption in enumerate(mainCaptions) if abs(caption['end'] - caption['start']) > 0.1]
+    subCaptions = [caption for i, caption in enumerate(subCaptions) if abs(caption['end'] - caption['start']) > 0.1]
+    
+    mainCaptions = list(map(roundCaption,mainCaptions))
+    subCaptions = list(map(roundCaption,subCaptions))
+    
+    # そのendの値が次のstartと同じか大きい場合、そのendの値を次のstartより0.001秒小さくする。ただし、startよりendが小さくなってはならない。
+    for i in range(len(mainCaptions)):
+        if i == len(mainCaptions) - 1:
+            break
+        if mainCaptions[i]['end'] >= mainCaptions[i + 1]['start'] and mainCaptions[i]['end'] - 0.001 > mainCaptions[i]['start']:
+            mainCaptions[i]['end'] = round(mainCaptions[i + 1]['start'] - 0.001, 3)
+            subCaptions[i]['end'] = round(subCaptions[i + 1]['start'] - 0.001, 3)
+    return mainCaptions, subCaptions
+
+def roundCaption(caption: dict):
+    return {
+        'text': caption['text'],
+        'start': round(caption['start'], 3),
+        'end': round(caption['end'], 3)
+    }
 
 def deleteOverlappedCaptions(mainCaptions: list[dict], subCaptions: list[dict]) -> list[dict]:
     while True:
@@ -211,7 +282,7 @@ def captionConnectedCount(mainCaptions: list[dict], subCaptions: list[dict], i: 
     while True:
         count = 0
         while True:
-            if i + overlapCount + count >= len(mainCaptions) - 1:
+            if i + overlapCount + count >= len(mainCaptions):
                 return overlapCount
             if mainCaptions[i + overlapCount - 1 + count]['text'] == mainCaptions[i + overlapCount+ count]['text']:
                 overlapCount = overlapCount + 1
@@ -225,7 +296,7 @@ def captionConnectedCount(mainCaptions: list[dict], subCaptions: list[dict], i: 
                 break
         count = 0
         while True:
-            if i + overlapCount + count >= len(mainCaptions) - 1:
+            if i + overlapCount + count >= len(mainCaptions):
                 return overlapCount
             if subCaptions[i + overlapCount - 1 + count]['text'] == subCaptions[i + overlapCount + count]['text']:
                 overlapCount = overlapCount + 1
