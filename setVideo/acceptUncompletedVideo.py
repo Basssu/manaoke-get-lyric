@@ -37,6 +37,7 @@ def setJson(documentId: str, flavor: str):
     ToFireStore.afterReview(
         {
             'isUncompletedVideo': False,
+            'isVerified': True,
             'isWaitingForReview': False,
         },
         documentId,

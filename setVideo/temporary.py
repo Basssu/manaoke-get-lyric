@@ -41,82 +41,12 @@ def do():
         videoId = docs[0].reference.id
         print(f'処理中のvideoId: {videoId}')
         video = docs[0].to_dict()
-        video['id'] = videoId
         lastDoc = docs[0]
-        serCaptionJsonUrl(video)
-    return
-
-def serCaptionJsonUrl(video: dict):
-    isUncompletedVideo = video.get('isUncompletedVideo')
-    uncompletedJsonUrl = video.get('uncompletedJsonUrl')
-    jsonUrl = video.get('jsonUrl')
-    videoId = video.get('id')
-    newCaptionDictList: Optional[list[dict]] = None
-    if isUncompletedVideo == False:
-        if jsonUrl == None:
-            print(f'jsonUrlがありませんでした。videoId: {videoId}')
-            return
-        response = urllib.request.urlopen(jsonUrl)
-        oldCaptionDictList: list[dict] = json.loads(response.read().decode())
-        newCaptionDictList = toNewDictListFromCompleted(oldCaptionDictList)
-    
-    elif isUncompletedVideo == True:
-        if uncompletedJsonUrl == None:
-            return
+        if video.get('isUncompletedVideo') == False:
+            db.collection('videos').document(videoId).update({'isVerified': True})
         else:
-            response = urllib.request.urlopen(uncompletedJsonUrl)
-            oldCaptionDictList: list[dict] = json.loads(response.read().decode())
-            newCaptionDictList = toNewDictListFromUncompleted(oldCaptionDictList)
-            
-    else:
-        print(f'isUncompletedVideoがnullです。videoId: {videoId}')
-        return
-    if newCaptionDictList == None:
-        print(f'newCaptionDictListがnullです。videoId: {videoId}')
-        return
-    
-    url = NewToStorage.newJsonUrl(videoId, newCaptionDictList)
-    ToFireStore.afterReview(
-        {
-            'captionJsonUrl': url,
-        },
-        videoId,
-    )
-        
+            db.collection('videos').document(videoId).update({'isVerified': False})
     return
-
-def toNewDictListFromCompleted(oldCaptionDictList: list[dict]) -> list[dict]:
-    newCaptionDictList = []
-    for oldCaptionDict in oldCaptionDictList:
-        koList = []
-        for detail in oldCaptionDict['detail']:
-            koList.append(detail['actualLyric'])
-        ko = ' '.join(koList)
-        newCaptionDict = {
-            'time': oldCaptionDict['time'],
-            'from': ko,
-            'to': oldCaptionDict['fullMeaning'],
-        }
-        newCaptionDictList.append(newCaptionDict)
-    return newCaptionDictList
-
-def toNewDictListFromUncompleted(oldCaptionDictList: list[dict]) -> list[dict]:
-    newCaptionDictList = []
-    for oldCaptionDict in oldCaptionDictList:
-        ko = oldCaptionDict.get('ko')
-        ja = oldCaptionDict.get('ja')
-        time = oldCaptionDict.get('time')
-        newCaptionDict = {
-            'time': time,
-        }
-        if ko != None:
-            newCaptionDict['from'] = ko
-        if ja != None:
-            newCaptionDict['to'] = ja
-        newCaptionDictList.append(newCaptionDict)
-    return newCaptionDictList
-
-
 
 def main():
     do()

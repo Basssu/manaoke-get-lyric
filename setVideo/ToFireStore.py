@@ -31,6 +31,7 @@ def toFirestore(
     # ドキュメントの存在を確認
     doc = doc_ref.get()
     if doc.exists:
+        print('既存のドキュメントが存在します')
         # 既存のドキュメントがある場合はフィールドの値を更新
         deleteKeysFromDict( # 以下のフィールドは更新しない
             firestoreDict, 
