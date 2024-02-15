@@ -16,27 +16,6 @@ def main():
     csv_filename = f"csv/videos_with_jasracCode_{formatted_time}.txt"
     with open(csv_filename, "w", newline="", encoding='shift_jis') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter='\t')
-        # csv_writer.writerow([
-        #     "インターフェイスキーコード", 
-        #     "コンテンツ区分", 
-        #     "コンテンツ枝番", 
-        #     "メドレー区分", 
-        #     "メドレー枝番", 
-        #     "コレクトコード", 
-        #     "ＪＡＳＲＡＣ作品コード", 
-        #     "原題名", 
-        #     "副題・邦題", 
-        #     "作詞者名", 
-        #     "補作詞・訳詞者名", 
-        #     "作曲者名", 
-        #     "編曲者名", 
-        #     "アーティスト名", 
-        #     "情報料（税抜）", 
-        #     "ＩＶＴ区分", 
-        #     "原詞訳詞区分", 
-        #     "IL区分", 
-        #     "リクエスト回数"
-        #     ])
         jasracCodeList = []
         recordsCount = 0
         for doc in videoDocList:
