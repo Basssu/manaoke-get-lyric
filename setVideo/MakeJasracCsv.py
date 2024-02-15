@@ -14,7 +14,7 @@ def main():
 
     formatted_time = current_time.strftime("%Y%m%d%H%M%S")
     csv_filename = f"csv/videos_with_jasracCode_{formatted_time}.txt"
-    with open(csv_filename, "w", newline="") as csvfile:
+    with open(csv_filename, "w", newline="", encoding='shift_jis') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter='\t')
         # csv_writer.writerow([
         #     "インターフェイスキーコード", 
@@ -45,6 +45,9 @@ def main():
                 continue
             jasracCodeList.append(data.get("jasracCode"))
             recordsCount += 1
+            title = data.get("title")
+            if not is_shift_jis_encodable(title):
+                title = '変換不可'
             csv_writer.writerow([
                 data.get("jasracCode").replace("-",""), #インターフェイスキーコード
                 "", #コンテンツ区分
@@ -53,7 +56,7 @@ def main():
                 "0", #メドレー枝番
                 "", #コレクトコード
                 data.get("jasracCode").replace("-",""), #ＪＡＳＲＡＣ作品コード
-                data.get("title"), #原題名
+                title, #原題名
                 "", #副題・邦題
                 "未取得", #作詞者名
                 "", #補作詞・訳詞者名
@@ -68,6 +71,13 @@ def main():
                 ])
     print("報告レコード数")
     print(recordsCount)
+    
+def is_shift_jis_encodable(text):
+    try:
+        text.encode('shift_jis')
+        return True
+    except UnicodeEncodeError:
+        return False
     
 if __name__ == '__main__':
     main()

@@ -90,7 +90,7 @@ def fetchJasracCodeList():
     if not firebase_admin._apps:
         cf.initializeFirebase(cf.getFlavor())
     db = firestore.client()
-    videoDocs = db.collection('videos').where('category', '==', 'music').get()
+    videoDocs = db.collection('videos').order_by('jasracCode').get()
     print('取得したドキュメント数')
     print(len(videoDocs))
     return videoDocs
