@@ -52,7 +52,7 @@ def fetchLatestVideoIdsWhenDesendant(latestVideoDocDict: dict, youtubePlaylistId
     videoIds = []
     nextPagetoken = None
     for i in range(50): #while1だと無限ループになる可能性があるので
-        playlistItemsResponse = GetYoutubeData.getVideosInPlaylist(
+        playlistItemsResponse = GetYoutubeData.get_videos_in_playlist(
             youtubePlaylistId = youtubePlaylistId,
             maxResults= 1,
             nextPageToken = nextPagetoken
@@ -64,7 +64,7 @@ def fetchLatestVideoIdsWhenDesendant(latestVideoDocDict: dict, youtubePlaylistId
         nextPagetoken = playlistItemsResponse.get("nextPageToken")
 
 def fetchLatestVideoIdsWhenAsendant(latestVideoDocDict: dict, youtubePlaylistId: str) -> list[str]:
-    playlistItemsResponse = GetYoutubeData.getItemResponseFromPlaylist(youtubePlaylistId)
+    playlistItemsResponse = GetYoutubeData.get_item_response_from_playlist(youtubePlaylistId)
     videoIds = []
     for playlistItem in playlistItemsResponse:
         publishedAt = publishedAtFromItemResponse(playlistItem)
@@ -73,7 +73,7 @@ def fetchLatestVideoIdsWhenAsendant(latestVideoDocDict: dict, youtubePlaylistId:
     return videoIds
 
 def isDescendantOfSeries(latestVideoDocDict: dict, youtubePlaylistId: str) -> bool: #Youtubeプレイリストがアップロード日時の降順になっているか
-    response = GetYoutubeData.getVideosInPlaylist(
+    response = GetYoutubeData.get_videos_in_playlist(
     youtubePlaylistId = youtubePlaylistId,
     maxResults = 1
     )
@@ -82,7 +82,7 @@ def isDescendantOfSeries(latestVideoDocDict: dict, youtubePlaylistId: str) -> bo
 
 def publishedAtFromItemResponse(videoResponse) -> datetime.datetime:
     youtubeVideoId = videoResponse["snippet"]["resourceId"]["videoId"]
-    response = GetYoutubeData.getVideo(youtubeVideoId) #動画一本釣りとplaylist経由での動画だとpublishedAtがズレるため
+    response = GetYoutubeData.get_video(youtubeVideoId) #動画一本釣りとplaylist経由での動画だとpublishedAtがズレるため
     return datetime.datetime.fromisoformat(response['snippet']['publishedAt'].replace('Z', '+00:00'))
 
 def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:

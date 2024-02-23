@@ -2,17 +2,17 @@ from firebase_admin import firestore
 from firebase_admin import storage
 import ConvenientFunctions as cf
 
-def deleteVideosFromFirebase(videoIds: list[str], flavor: str):
+def delete_videos_from_firebase(videoIds: list[str], flavor: str):
     for videoId in videoIds:
-        deleteVideoFromFirebase(videoId, flavor)
+        delete_video_from_firebase(videoId, flavor)
 
-def deleteVideoFromFirebase(videoId: str, flavor: str):
-    deleteDocumentFromFirebase('videos', videoId, willDeleteSubcollections=True)
-    deleteFromFirebaseStorage(f'videos/{videoId}/allData.json', flavor)
-    deleteFromFirebaseStorage(f'videos/{videoId}/caption.json', flavor)
-    deleteFromFirebaseStorage(f'uncompletedVideos/{videoId}/caption.json', flavor)
+def delete_video_from_firebase(videoId: str, flavor: str):
+    delete_document_from_firebase('videos', videoId, willDeleteSubcollections=True)
+    delete_from_firebase_storage(f'videos/{videoId}/allData.json', flavor)
+    delete_from_firebase_storage(f'videos/{videoId}/caption.json', flavor)
+    delete_from_firebase_storage(f'uncompletedVideos/{videoId}/caption.json', flavor)
 
-def deleteDocumentFromFirebase(
+def delete_document_from_firebase(
         collectionName: str,
         documentId: str, 
         willDeleteSubcollections: bool = False, 
@@ -23,16 +23,16 @@ def deleteDocumentFromFirebase(
     subcollections = doc_ref.collections()
     if willDeleteSubcollections: # サブコレクションの削除
         for subcollection in subcollections:
-            deleteSubcollection(subcollection)
+            delete_subcollection(subcollection)
 
-def deleteSubcollection(collectionRef):
+def delete_subcollection(collectionRef):
     documents = collectionRef.stream()
     for document in documents:
         document.reference.delete()
     collectionRef.delete()
 
 # 使用例
-def deleteFromFirebaseStorage(path: str, flavor: str):
+def delete_from_firebase_storage(path: str, flavor: str):
     domain = cf.firebase_domain(flavor)
     bucket = storage.bucket(domain)
     blob = bucket.blob(path)
@@ -45,7 +45,7 @@ def main():
     flavor = cf.get_flavor()
     cf.initialize_firebase(flavor)
     videoIds = cf.input_text('削除したい動画のvideoId(例: ko_ja_0rtV5esQT6I)を入力(複数の場合、","で区切る)').split(',')
-    deleteVideosFromFirebase(videoIds, flavor)
+    delete_videos_from_firebase(videoIds, flavor)
 
 if __name__ == '__main__':
     main()

@@ -5,7 +5,7 @@ import GetYoutubeData
 
 def video_ids_from_playlist_id(playlistId: str):
     videoIds = []
-    playlistItems = GetYoutubeData.getItemResponseFromPlaylist(playlistId)
+    playlistItems = GetYoutubeData.get_item_response_from_playlist(playlistId)
     for i in range(len(playlistItems)):
         videoIds.append(playlistItems[i]['snippet']['resourceId']['videoId'])
     return videoIds

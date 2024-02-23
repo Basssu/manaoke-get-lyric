@@ -7,14 +7,14 @@ import GetYoutubeData
 import datetime
 import pytz
 
-def makeFirestoreMap(
+def make_firestore_map(
     videoId: str, 
     policy: dict, 
     isGonneBeUncompletedVideo: bool, 
     hasTranslationFrom: bool,
     hasTranslationTo: bool,
     ):
-    response = GetYoutubeData.getVideo(videoId)
+    response = GetYoutubeData.get_video(videoId)
     if response is None:
         print('動画情報無し')
         return None
@@ -24,7 +24,7 @@ def makeFirestoreMap(
     publishedAt = response['snippet']['publishedAt']
     channelTitle = response['snippet']['channelTitle'] 
     thumbnailUrl = response['snippet']['thumbnails']['medium']['url']
-    durationInMilliseconds = youtubeDurationToInMilliseconds(response['contentDetails']['duration'])
+    durationInMilliseconds = youtube_duration_to_in_milliseconds(response['contentDetails']['duration'])
     print(f'videoId: {videoId}')
     print(f'title: {title}')
 
@@ -74,36 +74,36 @@ def makeFirestoreMap(
             "youtubeTitle": youtubeTitle,
         }
     if firestoreData['category'] == 'music':
-        firestoreData["tokenList"] = makeTokenListFromText(title)
+        firestoreData["tokenList"] = make_token_list_from_text(title)
 
     return firestoreData
 
-def makeTokenListFromText(text: str) -> list[str]:
+def make_token_list_from_text(text: str) -> list[str]:
     tokenList = []
     ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
     textWithoutKakko = cf.remove_brackets(text, '()')
     if text != textWithoutKakko and text.count("(") == 1 and text.count(")") == 1:
         insideKakko = text[text.find("(")+1:text.find(")")]
         if not any((a in insideKakko) for a in ngList):
-            tokenList = makeTokenListFromEachLetterCaseOfText(insideKakko)
+            tokenList = make_token_list_from_each_letter_case_of_text(insideKakko)
 
-    tokenList = list(set(makeTokenListFromEachLetterCaseOfText(textWithoutKakko) + tokenList)) #重複を削除
+    tokenList = list(set(make_token_list_from_each_letter_case_of_text(textWithoutKakko) + tokenList)) #重複を削除
     return sorted(tokenList)
 
-def makeTokenListFromEachLetterCaseOfText(text: str) -> list[str]:
+def make_token_list_from_each_letter_case_of_text(text: str) -> list[str]:
     resultList = []
     for letterSize in [text, text.upper(), text.lower(), text.capitalize()]:
-        resultList = list(set(makeNGram(letterSize) + resultList)) #重複を削除
+        resultList = list(set(make_n_gram(letterSize) + resultList)) #重複を削除
     return resultList
 
-def makeNGram(text: str) -> list[str]:
+def make_n_gram(text: str) -> list[str]:
     resultList = []
     for i in range(len(text)):
         token = text[0:i + 1]
         resultList.append(token)
     return list(set(resultList)) #重複を削除
 
-def youtubeDurationToInMilliseconds(durationStr: str) -> int:
+def youtube_duration_to_in_milliseconds(durationStr: str) -> int:
     # 時間の部分（PT1H30M）と秒の部分（PT30S）に分割します
     time_part = durationStr.replace('PT', '').replace('H', 'H ').replace('M', 'M ').replace('S', 'S')
     time_parts = time_part.split()

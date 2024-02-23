@@ -38,7 +38,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         isUncompletedVideo = False
         if not cf.answered_yes(f'{videoId}:字幕の行数は{len(koreanCaptions)}行です。続けますか？'):
             return False
-    firestoreMap = MakeFirestoreMap.makeFirestoreMap(
+    firestoreMap = MakeFirestoreMap.make_firestore_map(
         videoId, 
         policy, 
         isUncompletedVideo, 
