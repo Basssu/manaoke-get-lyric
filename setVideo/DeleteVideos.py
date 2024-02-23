@@ -33,7 +33,7 @@ def deleteSubcollection(collectionRef):
 
 # 使用例
 def deleteFromFirebaseStorage(path: str, flavor: str):
-    domain = cf.firebaseDomain(flavor)
+    domain = cf.firebase_domain(flavor)
     bucket = storage.bucket(domain)
     blob = bucket.blob(path)
     try:
@@ -42,7 +42,7 @@ def deleteFromFirebaseStorage(path: str, flavor: str):
         print(f'{path}は存在しません')
     
 def main():
-    flavor = cf.getFlavor()
+    flavor = cf.get_flavor()
     cf.initialize_firebase(flavor)
     videoIds = cf.input_text('削除したい動画のvideoId(例: ko_ja_0rtV5esQT6I)を入力(複数の場合、","で区切る)').split(',')
     deleteVideosFromFirebase(videoIds, flavor)

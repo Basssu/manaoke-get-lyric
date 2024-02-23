@@ -161,7 +161,7 @@ def setVideos(flavor: str, youtubeVideoIds: list[str] = None, isNonStop: bool = 
     Notification.sendCelebrityLikersByVideoDocs(completedVideoDocs)
 
 def main():
-    flavor = cf.getFlavor()
+    flavor = cf.get_flavor()
     setVideos(flavor, isNonStop = cf.answered_yes('動画ごとの確認をスキップしますか？'))
 
 if __name__ == '__main__':

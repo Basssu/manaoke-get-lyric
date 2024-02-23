@@ -23,30 +23,30 @@ def input_text(question: str) -> str:
     return text
 
 def initialize_firebase(flavor: str):
-    cred = firebaseCreds(flavor)
-    domain = firebaseDomain(flavor)
+    cred = firebase_creds(flavor)
+    domain = firebase_domain(flavor)
     if not firebase_admin._apps:
         firebase_admin.initialize_app(cred, {
             'storageBucket': domain
         })
     return cred, domain
 
-def firebaseCreds(flavor: str):
+def firebase_creds(flavor: str):
     if flavor == "prod":
         return credentials.Certificate("../firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
     else:
         return credentials.Certificate("../firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
 
-def firebaseDomain(flavor: str):
+def firebase_domain(flavor: str):
     if flavor == "prod":
         return "manaoke-8c082.appspot.com"
     else:
         return "manaoke-stg.appspot.com"
     
-def removeBrackets(text: str, brackets: str) -> str:
+def remove_brackets(text: str, brackets: str) -> str:
     pattern = re.escape(brackets[0]) + r'[^\[{}\]()]*' + re.escape(brackets[1])
     result = re.sub(pattern, '', text)
     return result
 
-def getFlavor() -> str:
+def get_flavor() -> str:
     return 'prod' if answered_yes('flavorはどっち？(y = prod, n = stg)') else 'stg'

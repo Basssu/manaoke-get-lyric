@@ -95,7 +95,7 @@ def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:
     return uniqueList
 
 def main():
-    flavor = cf.getFlavor()
+    flavor = cf.get_flavor()
     cf.initialize_firebase(flavor)
     SeriesDocsDictList = getCollectionDocsAsDictList('series')
     updatedVideosDict = updatedPlaylistIdsAndTheVideoId(SeriesDocsDictList) #キーはplaylistId、値はvideoIdの配列

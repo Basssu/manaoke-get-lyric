@@ -81,7 +81,7 @@ def makeFirestoreMap(
 def makeTokenListFromText(text: str) -> list[str]:
     tokenList = []
     ngList = ["ver", "Ver", "VER", "feat", "Feat", "Prod", "prod", "mv", "MV"]
-    textWithoutKakko = cf.removeBrackets(text, '()')
+    textWithoutKakko = cf.remove_brackets(text, '()')
     if text != textWithoutKakko and text.count("(") == 1 and text.count(")") == 1:
         insideKakko = text[text.find("(")+1:text.find(")")]
         if not any((a in insideKakko) for a in ngList):

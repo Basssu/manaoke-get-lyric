@@ -9,7 +9,7 @@ lastVideoId = None
 
 def getVideoDocById() -> Optional[firestore.DocumentSnapshot]:
     if not firebase_admin._apps:
-        cf.initialize_firebase(cf.getFlavor())
+        cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
     doc = db.collection('videos').document(lastVideoId).get()
     if doc.exists:
@@ -19,7 +19,7 @@ def getVideoDocById() -> Optional[firestore.DocumentSnapshot]:
 
 def do():
     if not firebase_admin._apps:
-        cf.initialize_firebase(cf.getFlavor())
+        cf.initialize_firebase(cf.get_flavor())
     lastDoc = getVideoDocById()
     db = firestore.client()
     query = db.collection('videos').order_by('publishedAt').limit(1)
