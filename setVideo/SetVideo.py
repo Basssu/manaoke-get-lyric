@@ -9,7 +9,7 @@ import NewToStorage
 
 # ビデオIDを入力する
 def inputVideoIds() -> list[str]:
-    videoIds = cf.inputText('videoIdを入力(複数ある場合は","で区切ってください)')
+    videoIds = cf.input_text('videoIdを入力(複数ある場合は","で区切ってください)')
     videoIds = videoIds.split(",")
     resultVideoIds = []
     for videoId in videoIds:
@@ -19,12 +19,12 @@ def inputVideoIds() -> list[str]:
 
 def videoIdsLoop(videoIds: list[str], flavor: str, policy: dict, isNonStop: bool) -> list[str]: # 返り値は、スキップされた動画のvideoIdのリスト
     skippedVideoIds = []
-    cf.initializeFirebase(flavor)
+    cf.initialize_firebase(flavor)
     for videoId in videoIds:
         isNotSkipped = setEachVideo(videoId, flavor, policy, isNonStop)
         if not isNotSkipped:
             skippedVideoIds.append(videoId)
-        if not isNonStop and not cf.answeredYes('次の動画に進みますか？'):
+        if not isNonStop and not cf.answered_yes('次の動画に進みますか？'):
             return skippedVideoIds
     return skippedVideoIds
 
@@ -36,7 +36,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         koreanCaptions = deleteIfOneCaptionNotExist(koreanCaptions, japaneseCaptions)
         japaneseCaptions = deleteIfOneCaptionNotExist(japaneseCaptions, koreanCaptions)
         isUncompletedVideo = False
-        if not cf.answeredYes(f'{videoId}:字幕の行数は{len(koreanCaptions)}行です。続けますか？'):
+        if not cf.answered_yes(f'{videoId}:字幕の行数は{len(koreanCaptions)}行です。続けますか？'):
             return False
     firestoreMap = MakeFirestoreMap.makeFirestoreMap(
         videoId, 
@@ -45,7 +45,7 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
         not (koreanCaptions == None or not koreanCaptions),
         not (japaneseCaptions == None or not japaneseCaptions),
         )
-    if (not isNonStop and cf.answeredYes('この動画をスキップしますか？')) or firestoreMap == None: return False
+    if (not isNonStop and cf.answered_yes('この動画をスキップしますか？')) or firestoreMap == None: return False
     if not (koreanCaptions == None and japaneseCaptions == None):
         captionJsonUrl = getCaptionJsonUrl(videoId, koreanCaptions, japaneseCaptions)
         
@@ -124,24 +124,24 @@ def makeCaptionDictList(mainCaptions: Optional[list[dict]], subCaptions: Optiona
 
 def convertTimeToSrtFormat(start: float, duration: float) -> str:
     end = start + duration
-    time = f'{cf.formatTime(start)} --> {cf.formatTime(end)}'
+    time = f'{cf.format_time(start)} --> {cf.format_time(end)}'
     return time
 
 def setPolicy() -> dict:
     processPolicy = {
-        'setCelebrityIdsEachTime': cf.answeredYes('毎回celebrityIdsを入力しますか？'),
-        'setIfTitleIsSameAsYoutubeTitleEachTime': cf.answeredYes('タイトルはYoutubeのタイトルと同じか毎回決めますか？'),
-        'setCategoryEachTime': cf.answeredYes('毎回カテゴリーを入力しますか？'),
-        'setPlaylistIdsEachTime': cf.answeredYes('毎回playlistIdsを入力しますか？'),
+        'setCelebrityIdsEachTime': cf.answered_yes('毎回celebrityIdsを入力しますか？'),
+        'setIfTitleIsSameAsYoutubeTitleEachTime': cf.answered_yes('タイトルはYoutubeのタイトルと同じか毎回決めますか？'),
+        'setCategoryEachTime': cf.answered_yes('毎回カテゴリーを入力しますか？'),
+        'setPlaylistIdsEachTime': cf.answered_yes('毎回playlistIdsを入力しますか？'),
     }
     if(not processPolicy['setCelebrityIdsEachTime']):
-        processPolicy['celebrityIds'] = cf.inputText('celebrityIdsを入力してください。(複数の場合、","で区切ってください)').split(",")
+        processPolicy['celebrityIds'] = cf.input_text('celebrityIdsを入力してください。(複数の場合、","で区切ってください)').split(",")
     if(not processPolicy['setIfTitleIsSameAsYoutubeTitleEachTime']):
-        processPolicy['IsTitleSameAsYoutubeTitle'] = cf.answeredYes('タイトルはYoutubeのタイトルと同じですか？')
+        processPolicy['IsTitleSameAsYoutubeTitle'] = cf.answered_yes('タイトルはYoutubeのタイトルと同じですか？')
     if(not processPolicy['setCategoryEachTime']):
-        processPolicy['category'] = 'video' if cf.answeredYes('カテゴリーはどっち？(y = video, n = music)') else 'music'
+        processPolicy['category'] = 'video' if cf.answered_yes('カテゴリーはどっち？(y = video, n = music)') else 'music'
     if(not processPolicy['setPlaylistIdsEachTime']):
-        processPolicy['playlistIds'] = cf.inputText('playlistIdsを入力してください。(複数の場合、","で区切ってください)').split(",")
+        processPolicy['playlistIds'] = cf.input_text('playlistIdsを入力してください。(複数の場合、","で区切ってください)').split(",")
     return processPolicy
 
 def setVideos(flavor: str, youtubeVideoIds: list[str] = None, isNonStop: bool = False):
@@ -154,7 +154,7 @@ def setVideos(flavor: str, youtubeVideoIds: list[str] = None, isNonStop: bool = 
     print('\n')
     print(f'追加した動画の数: {len(addedYoutubeVideoIds)}')
     print(f'追加した動画のYoutubeVideoID: {addedYoutubeVideoIds}')
-    if not cf.answeredYes('通知処理に進みますか？'):
+    if not cf.answered_yes('通知処理に進みますか？'):
         return
     completedVideos = ToFireStore.completedVideos(addedYoutubeVideoIds)
     completedVideoDocs = ToFireStore.fetchVideosByYouttubeVideoIds(completedVideos)
@@ -162,7 +162,7 @@ def setVideos(flavor: str, youtubeVideoIds: list[str] = None, isNonStop: bool = 
 
 def main():
     flavor = cf.getFlavor()
-    setVideos(flavor, isNonStop = cf.answeredYes('動画ごとの確認をスキップしますか？'))
+    setVideos(flavor, isNonStop = cf.answered_yes('動画ごとの確認をスキップしますか？'))
 
 if __name__ == '__main__':
     main()

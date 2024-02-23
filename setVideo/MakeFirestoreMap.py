@@ -29,17 +29,17 @@ def makeFirestoreMap(
     print(f'title: {title}')
 
     if policy["setIfTitleIsSameAsYoutubeTitleEachTime"]:
-        if not cf.answeredYes('タイトルはYoutubeのタイトルと同じですか？'):
-            title = cf.inputText('タイトルを入力してください。')   
+        if not cf.answered_yes('タイトルはYoutubeのタイトルと同じですか？'):
+            title = cf.input_text('タイトルを入力してください。')   
     else:
         if not policy["IsTitleSameAsYoutubeTitle"]:
-            title = cf.inputText('タイトルを入力してください。')
+            title = cf.input_text('タイトルを入力してください。')
 
-    celebrityIds = cf.inputText('celebrityIdsを入力してください。(複数の場合、","で区切ってください)') .split(",")if policy["setCelebrityIdsEachTime"] else policy["celebrityIds"]
+    celebrityIds = cf.input_text('celebrityIdsを入力してください。(複数の場合、","で区切ってください)') .split(",")if policy["setCelebrityIdsEachTime"] else policy["celebrityIds"]
     if celebrityIds == ['']:
         celebrityIds = []
     
-    playlistIds = cf.inputText('playlistIdsを入力してください。(複数の場合、","で区切ってください)') .split(",") if policy["setPlaylistIdsEachTime"] else policy["playlistIds"]
+    playlistIds = cf.input_text('playlistIdsを入力してください。(複数の場合、","で区切ってください)') .split(",") if policy["setPlaylistIdsEachTime"] else policy["playlistIds"]
     if playlistIds == ['']: 
         playlistIds = []
 
@@ -48,7 +48,7 @@ def makeFirestoreMap(
             policy['category'] 
             if not policy['setCategoryEachTime'] 
             else 'video' 
-            if cf.answeredYes('カテゴリーはどっち？(y = video, n = music)') 
+            if cf.answered_yes('カテゴリーはどっち？(y = video, n = music)') 
             else 'music',
             "celebrityIds": celebrityIds,
             "channelId": channelId,

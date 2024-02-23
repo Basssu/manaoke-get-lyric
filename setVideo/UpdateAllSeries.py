@@ -96,7 +96,7 @@ def mergeAndRemoveDuplicates(dictData: dict) -> list[str]:
 
 def main():
     flavor = cf.getFlavor()
-    cf.initializeFirebase(flavor)
+    cf.initialize_firebase(flavor)
     SeriesDocsDictList = getCollectionDocsAsDictList('series')
     updatedVideosDict = updatedPlaylistIdsAndTheVideoId(SeriesDocsDictList) #キーはplaylistId、値はvideoIdの配列
     print('------------------')
@@ -106,7 +106,7 @@ def main():
     allVideoIds = mergeAndRemoveDuplicates(updatedVideosDict)
     print('全ての動画のvideoId:')
     print(','.join(allVideoIds)) #追加するべき動画のvideoIdを出力
-    if not cf.answeredYes('実際にこれらの動画を追加しますか？'):
+    if not cf.answered_yes('実際にこれらの動画を追加しますか？'):
         return
     SetVideo.setVideos(flavor = flavor, youtubeVideoIds = allVideoIds)
     

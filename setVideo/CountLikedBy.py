@@ -8,7 +8,7 @@ def get_liked_by_length(doc):
 
 def main():
     flavor = cf.getFlavor()
-    cf.initializeFirebase(flavor)
+    cf.initialize_firebase(flavor)
     db = firestore.client()
     # Celebritiesコレクションの全ドキュメントを取得
     celebrities_ref = db.collection("celebrities")

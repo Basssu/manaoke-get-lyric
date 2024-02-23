@@ -10,7 +10,7 @@ jsonFileName = 'caption.json'
 
 def newJsonUrl(videoId: str, data: str) -> str:
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     filePath = jsonFilePath(videoId, data)
     app = firebase_admin.get_app()
     domain = app.options.get('storageBucket')

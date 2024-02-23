@@ -3,24 +3,24 @@ import youtube_transcript_api
 import ConvenientFunctions as cf
 import GetYoutubeData
 
-def videoIdsFromPlaylistId(playlistId: str):
+def video_ids_from_playlist_id(playlistId: str):
     videoIds = []
     playlistItems = GetYoutubeData.getItemResponseFromPlaylist(playlistId)
     for i in range(len(playlistItems)):
         videoIds.append(playlistItems[i]['snippet']['resourceId']['videoId'])
     return videoIds
 
-def captionLanguageFromVideoId(videoId: str) -> list[str]:
+def caption_language_from_video_id(videoId: str) -> list[str]:
     languages = []
-    if hasThisLanguageCaption('ja', videoId):
+    if has_this_language_caption('ja', videoId):
         languages.append('ja')
-    if hasThisLanguageCaption('ko', videoId):
+    if has_this_language_caption('ko', videoId):
         languages.append('ko')
 
     languages.sort()
     return languages
 
-def hasThisLanguageCaption(languageCode: str, videoId: str):
+def has_this_language_caption(languageCode: str, videoId: str):
     try:
         transcriptList = youtube_transcript_api.YouTubeTranscriptApi.list_transcripts(videoId)
         for transcript in transcriptList:
@@ -30,14 +30,14 @@ def hasThisLanguageCaption(languageCode: str, videoId: str):
         print('error: ' + videoId + ' has no caption')
     return False
 
-def showVideoIdsWithCaption(videoIds: list[str]):
+def show_video_ids_with_caption(videoIds: list[str]):
     videosWithoutCaption = []
     videosWithOnlyJapaneseCaption = []
     videosWithOnlyKoreanCaption = []
     videosWithBothJapaneseAndKoreanCaption = []
     for videoId in videoIds:
         print(f'{videoIds.index(videoId)} / {len(videoIds)}')
-        languages = captionLanguageFromVideoId(videoId)
+        languages = caption_language_from_video_id(videoId)
         if not languages:
             videosWithoutCaption.append(videoId)
             continue
@@ -63,9 +63,9 @@ def showVideoIdsWithCaption(videoIds: list[str]):
     print(','.join(videoIds) + '\n')
 
 def main():
-    playlistId = cf.inputText('playlistIdを入力')
-    videoIds = videoIdsFromPlaylistId(playlistId)
-    showVideoIdsWithCaption(videoIds)
+    playlistId = cf.input_text('playlistIdを入力')
+    videoIds = video_ids_from_playlist_id(playlistId)
+    show_video_ids_with_caption(videoIds)
 
 if __name__ == '__main__':
     main()

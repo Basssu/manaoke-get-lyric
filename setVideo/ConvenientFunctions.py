@@ -3,10 +3,10 @@ from firebase_admin import credentials
 import re
 import firebase_admin
 
-def formatTime(time: float) -> str:
+def format_time(time: float) -> str:
     return (datetime.timedelta(seconds=time) + datetime.datetime(1900,1,1)).strftime('%H:%M:%S,%f')[:-3]
 
-def answeredYes(question: str) -> bool:
+def answered_yes(question: str) -> bool:
     while True:
         print(f'{question}(y/n)')
         answer = input()
@@ -17,12 +17,12 @@ def answeredYes(question: str) -> bool:
         else:
             print('yかnで答えてください')
 
-def inputText(question: str) -> str:
+def input_text(question: str) -> str:
     print(question)
     text = input()
     return text
 
-def initializeFirebase(flavor: str):
+def initialize_firebase(flavor: str):
     cred = firebaseCreds(flavor)
     domain = firebaseDomain(flavor)
     if not firebase_admin._apps:
@@ -49,4 +49,4 @@ def removeBrackets(text: str, brackets: str) -> str:
     return result
 
 def getFlavor() -> str:
-    return 'prod' if answeredYes('flavorはどっち？(y = prod, n = stg)') else 'stg'
+    return 'prod' if answered_yes('flavorはどっち？(y = prod, n = stg)') else 'stg'

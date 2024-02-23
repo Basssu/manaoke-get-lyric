@@ -51,7 +51,7 @@ def weeklyDownloads(year: int, month: int, day: int):
     print(f'ユーザ数: {len(users)}')
 
 def main():
-    isWeeklyCount = cf.answeredYes('y = 週ごとのユーザ数を集計, n = uidから年齢')
+    isWeeklyCount = cf.answered_yes('y = 週ごとのユーザ数を集計, n = uidから年齢')
     if isWeeklyCount:
         print('どの週のユーザを集計しますか？(月曜日の日付を入力してください)')
         year = int(input('year: '))

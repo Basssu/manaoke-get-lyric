@@ -54,7 +54,7 @@ def deleteKeysFromDict(dict: dict, keys: list[str]):
 
 def celebrityLikerUids(celebrityId: str) -> list[str]:
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     db = firestore.client()
     celebrityDocs = db.collection_group('likedCelebrities').where('celebrityId', '==', celebrityId).get()
     uids = []
@@ -79,7 +79,7 @@ def isCompletedVideo(youtubeVideoId: str) -> bool:
 
 def fetchJasracCodeList():
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     db = firestore.client()
     videoDocs = db.collection('videos').order_by('jasracCode').get()
     print('取得したドキュメント数')
@@ -88,7 +88,7 @@ def fetchJasracCodeList():
 
 def fetchUserByUid(uid: str):
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     db = firestore.client()
     userDoc = db.collection('users').document(uid).get()
     return userDoc
@@ -100,7 +100,7 @@ def fetchUserBirthdayByUids(uid: str) -> Optional[datetime.datetime]:
 
 def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     db = firestore.client()
     videos_ref = db.collection('videos')
     query = videos_ref.where('videoId', '==', youtubeVideoId).limit(1)
@@ -111,7 +111,7 @@ def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
 
 def isMusicNotificationEnabled(uid: str, category: str) -> bool:
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     db = firestore.client()
     docRef = db.collection('users').document(uid)
     fieldName = 'isMusicNotificationEnabled'
@@ -122,7 +122,7 @@ def isMusicNotificationEnabled(uid: str, category: str) -> bool:
 
 def fetchRangedUsers(start: datetime.datetime, end: datetime.datetime) -> list[dict]:
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     lastDoc = None
     db = firestore.client()
     users = []
@@ -153,7 +153,7 @@ def fetchVideosByYouttubeVideoIds(youtubeVideoIds: list[str]):
 
 def fetchDocbyCollectionNameAndDocumentId(collectionName: str, documentId: str):
     if not firebase_admin._apps:
-        cf.initializeFirebase(cf.getFlavor())
+        cf.initialize_firebase(cf.getFlavor())
     db = firestore.client()
     docRef = db.collection(collectionName).document(documentId)
     return docRef.get()
