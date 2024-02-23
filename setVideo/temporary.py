@@ -1,12 +1,7 @@
 from firebase_admin import firestore
 import firebase_admin
 import ConvenientFunctions as cf
-import datetime
-import urllib.request
 from typing import Optional
-import json
-import ToFireStore
-import NewToStorage
 
 videosDir = 'videos'
 jsonFileName = 'caption.json'

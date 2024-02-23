@@ -7,7 +7,13 @@ import GetYoutubeData
 import datetime
 import pytz
 
-def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool, captionLanguages: list[str]):
+def makeFirestoreMap(
+    videoId: str, 
+    policy: dict, 
+    isGonneBeUncompletedVideo: bool, 
+    hasTranslationFrom: bool,
+    hasTranslationTo: bool,
+    ):
     response = GetYoutubeData.getVideo(videoId)
     if response is None:
         print('動画情報無し')
@@ -18,7 +24,6 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
     publishedAt = response['snippet']['publishedAt']
     channelTitle = response['snippet']['channelTitle'] 
     thumbnailUrl = response['snippet']['thumbnails']['medium']['url']
-    defaultAudioLanguage = response['snippet'].get('defaultAudioLanguage')
     durationInMilliseconds = youtubeDurationToInMilliseconds(response['contentDetails']['duration'])
     print(f'videoId: {videoId}')
     print(f'title: {title}')
@@ -50,8 +55,8 @@ def makeFirestoreMap(videoId: str, policy: dict, isGonneBeUncompletedVideo: bool
             "channelTitle": channelTitle,
             "createdAt": datetime.datetime.now(pytz.timezone('Asia/Tokyo')),
             "durationInMilliseconds": durationInMilliseconds,
-            "hasTranslationAfterSubtitles": 'ja' in captionLanguages,
-            "hasTranslationBeforeSubtitles": 'ko' in captionLanguages,
+            "hasTranslationAfterSubtitles": hasTranslationTo,
+            "hasTranslationBeforeSubtitles": hasTranslationFrom,
             "isCaptionFromModified": False, #仮
             "isCaptionToModified": False, #仮
             "isInvisible": durationInMilliseconds < 60000,

@@ -3,8 +3,6 @@ from firebase_admin import firestore
 import GetYoutubeData
 import datetime
 import SetVideo
-import Notification
-import ToFireStore
 
 def getCollectionDocsAsDictList(collectionName: str) -> list[dict]:
     db = firestore.client()

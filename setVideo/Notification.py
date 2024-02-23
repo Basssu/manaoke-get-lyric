@@ -1,7 +1,6 @@
 from firebase_admin import firestore
 from firebase_admin import messaging
 from typing import Optional
-import ConvenientFunctions as cf
 import ToFireStore
 
 def uidsToDeviceTokens(uids: list[str]) -> list[str]:

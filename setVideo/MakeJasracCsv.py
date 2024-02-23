@@ -1,5 +1,4 @@
 import csv
-import ConvenientFunctions as cf
 import ToFireStore
 from datetime import datetime
 import os
