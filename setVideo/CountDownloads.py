@@ -45,7 +45,7 @@ def weekly_downloads(year: int, month: int, day: int):
         print('月曜日の日付を入力してください')
         return None
     nextWeekDate = date + timedelta(days=7)
-    users = ToFireStore.fetchRangedUsers(date, nextWeekDate)
+    users = ToFireStore.fetch_ranged_users(date, nextWeekDate)
     show_downloads_by_age(users)
     print(f'{date.strftime("%Y%m%d")}~{nextWeekDate.strftime("%Y%m%d")}')
     print(f'ユーザ数: {len(users)}')
@@ -61,7 +61,7 @@ def main():
     else:
         print('年齢を取得したいuidは？')
         uid = input('uid: ')
-        birthday = ToFireStore.fetchUserBirthdayByUids(uid)
+        birthday = ToFireStore.fetch_user_birthday_by_uids(uid)
         if birthday == None:
             print('誕生日が取得できませんでした')
             return

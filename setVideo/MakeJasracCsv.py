@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 def main():
-    videoDocList = ToFireStore.fetchJasracCodeList()
+    videoDocList = ToFireStore.fetch_jasrac_code_list()
     current_time = datetime.now()
     
     directory = 'csv'

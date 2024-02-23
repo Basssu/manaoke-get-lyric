@@ -3,7 +3,7 @@ from firebase_admin import messaging
 from typing import Optional
 import ToFireStore
 
-def uidsToDeviceTokens(uids: list[str]) -> list[str]:
+def uids_to_device_tokens(uids: list[str]) -> list[str]:
     db = firestore.client()
     deviceTokens = []
     for uid in uids:
@@ -16,7 +16,7 @@ def uidsToDeviceTokens(uids: list[str]) -> list[str]:
 
     return deviceTokens
 
-def sendNotificationByDeviceToken(
+def send_notification_by_device_token(
         deviceTokens: list[str], 
         title: str, 
         body: str,
@@ -47,16 +47,16 @@ def sendNotificationByDeviceToken(
         print('args:' + str(e.args))
         print('e自身:' + str(e))
 
-def sendNotificationToCelebrityLikers(
+def send_notification_to_celebrity_likers(
     celebrityId: str, 
     body: Optional[str] = None,
     category: Optional[str] = None,
     id: Optional[str] = None,
     ):
-    CelebrityDocDict = ToFireStore.fetchDocbyCollectionNameAndDocumentId("celebrities", celebrityId).to_dict()
-    likedBy = ToFireStore.celebrityLikerUids(celebrityId)
-    uids = uidsToSendNotification(likedBy, category)
-    deviceTokens = uidsToDeviceTokens(uids)
+    CelebrityDocDict = ToFireStore.fetch_doc_by_collection_name_and_documentId("celebrities", celebrityId).to_dict()
+    likedBy = ToFireStore.celebrity_liker_uids(celebrityId)
+    uids = uids_to_send_notification(likedBy, category)
+    deviceTokens = uids_to_device_tokens(uids)
     if body == None:
         body = '韓国語を理解しながら楽しもう！'
     title = f'{CelebrityDocDict["name"]}の新着動画'
@@ -65,9 +65,9 @@ def sendNotificationToCelebrityLikers(
     elif category == 'video':
         title = f'{CelebrityDocDict["name"]}の新着エピソード'
     print(f'{CelebrityDocDict["name"]}をお気に入り登録している人に通知を送信します' if CelebrityDocDict['name'] != None else '')
-    sendNotificationByDeviceToken(deviceTokens, title, body, {'id': id, 'route': 'video'} if id != None else {})
+    send_notification_by_device_token(deviceTokens, title, body, {'id': id, 'route': 'video'} if id != None else {})
 
-def sendCelebrityLikersByVideoDocs(videoDocs: list[firestore.DocumentSnapshot]):
+def send_celebrity_likers_by_video_docs(videoDocs: list[firestore.DocumentSnapshot]):
     for videoDoc in videoDocs:
         videoDocDict = videoDoc.to_dict()
         celebrityIds = videoDocDict.get('celebrityIds')
@@ -78,31 +78,11 @@ def sendCelebrityLikersByVideoDocs(videoDocs: list[firestore.DocumentSnapshot]):
         else:
             body = f'「{videoDocDict["title"]}」を韓国語で楽しもう！'
         for celebrityId in celebrityIds if celebrityIds != None else [] :
-            sendNotificationToCelebrityLikers(celebrityId, body, category, videoDoc.id)
+            send_notification_to_celebrity_likers(celebrityId, body, category, videoDoc.id)
             
-def uidsToSendNotification(uids: list[str], category: str):
+def uids_to_send_notification(uids: list[str], category: str):
     result = []
     for uid in uids:
-        if ToFireStore.isMusicNotificationEnabled(uid, category):
+        if ToFireStore.is_music_notification_enabled(uid, category):
             result.append(uid)
     return result
-
-# ↓シリーズの動画が追加されたときに、シリーズをお気に入り登録している人に通知を送信する処理をしていたとき
-# def sendCelebrityLikersByMusicVideoDocs(musicVideoDocs: list[firestore.DocumentSnapshot]):
-#     for musicVideoDoc in musicVideoDocs:
-#         musicVideoDocDict = musicVideoDoc.to_dict()
-#         if musicVideoDoc == None or not 'celebrityIds' in musicVideoDocDict or musicVideoDocDict['celebrityIds'] == None:
-#             continue
-#         for celebrityId in musicVideoDocDict['celebrityIds']:
-#             body = f'「{musicVideoDocDict["title"]}」を韓国語で歌おう♫'
-#             sendNotificationToCelebrityLikers(celebrityId, body)
-
-# def sendToSeriesLiker(seriesId: str):
-#     seriesDocDict = ToFireStore.fetchDocbyCollectionNameAndDocumentId("series", seriesId).to_dict()
-#     if seriesDocDict == None or not 'likedBy' in seriesDocDict or seriesDocDict['likedBy'] == None:
-#         print(f'series/{seriesId} のlikedByをうまく取得できませんでした。')
-#         return
-#     likedBy = seriesDocDict['likedBy']
-#     deviceTokens = uidsToDeviceTokens(likedBy)
-#     print(f'{seriesDocDict["name"]}をお気に入り登録している人に通知を送信します' if seriesDocDict['name'] != None else '')
-#     sendNotificationByDeviceToken(deviceTokens, 'お気に入りシリーズの新着動画', f'韓国語を理解しながら「{seriesDocDict["name"]}」を楽しもう！')

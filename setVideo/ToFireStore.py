@@ -5,7 +5,7 @@ import pprint
 import datetime
 from typing import Optional
 
-def toFirestore(
+def to_firestore(
         firestoreDict: dict, 
         flavor: str, 
         documentId: str,
@@ -24,7 +24,7 @@ def toFirestore(
     if doc.exists:
         print('既存のドキュメントが存在します')
         # 既存のドキュメントがある場合はフィールドの値を更新
-        deleteKeysFromDict( # 以下のフィールドは更新しない
+        delete_keys_from_dict( # 以下のフィールドは更新しない
             firestoreDict, 
             [
                 'isUncompletedVideo', 
@@ -38,21 +38,13 @@ def toFirestore(
         doc_ref.set(firestoreDict)
     return firestoreDict
 
-def afterReview(dict: dict, documentId: str):
-    db = firestore.client()
-    doc_ref = db.collection('videos').document(documentId)
-    doc_ref.update(dict)
-    print('firestoreに反映しました')
-    pprint.pprint(dict)
-    return 
-
-def deleteKeysFromDict(dict: dict, keys: list[str]):
+def delete_keys_from_dict(dict: dict, keys: list[str]):
     for key in keys:
         if key in dict:
             del dict[key]
     return dict
 
-def celebrityLikerUids(celebrityId: str) -> list[str]:
+def celebrity_liker_uids(celebrityId: str) -> list[str]:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
@@ -62,22 +54,22 @@ def celebrityLikerUids(celebrityId: str) -> list[str]:
         uids.append(celebrityDoc.reference.parent.parent.id)
     return list(set(uids)) #重複削除(念の為)
 
-def completedVideos(youtubeVideoIds: list[str]) -> list[str]:
+def completed_videos(youtubeVideoIds: list[str]) -> list[str]:
     result = []
     for youtubeVideoId in youtubeVideoIds:
-        if isCompletedVideo(youtubeVideoId):
+        if is_completed_video(youtubeVideoId):
             result.append(youtubeVideoId)
     return result
 
-def isCompletedVideo(youtubeVideoId: str) -> bool:
-    videoDocDict = fetchVideoByYoutubeVideoId(youtubeVideoId).to_dict()
+def is_completed_video(youtubeVideoId: str) -> bool:
+    videoDocDict = fetch_video_by_youtube_video_id(youtubeVideoId).to_dict()
     if not 'isUncompletedVideo' in videoDocDict or videoDocDict['isUncompletedVideo'] == None:
         return False
     if videoDocDict['isUncompletedVideo'] == False:
         return True
     return False
 
-def fetchJasracCodeList():
+def fetch_jasrac_code_list():
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
@@ -86,19 +78,19 @@ def fetchJasracCodeList():
     print(len(videoDocs))
     return videoDocs
 
-def fetchUserByUid(uid: str):
+def fetch_user_by_uid(uid: str):
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
     userDoc = db.collection('users').document(uid).get()
     return userDoc
 
-def fetchUserBirthdayByUids(uid: str) -> Optional[datetime.datetime]:
-    userDoc = fetchUserByUid(uid)
+def fetch_user_birthday_by_uids(uid: str) -> Optional[datetime.datetime]:
+    userDoc = fetch_user_by_uid(uid)
     birthday = userDoc.to_dict().get('birthday')
     return birthday
 
-def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
+def fetch_video_by_youtube_video_id(youtubeVideoId: str):
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
@@ -109,7 +101,7 @@ def fetchVideoByYoutubeVideoId(youtubeVideoId: str):
     print(len(list))
     return list[0]
 
-def isMusicNotificationEnabled(uid: str, category: str) -> bool:
+def is_music_notification_enabled(uid: str, category: str) -> bool:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
@@ -120,7 +112,7 @@ def isMusicNotificationEnabled(uid: str, category: str) -> bool:
     isNotificationEnabled = docRef.get().to_dict().get(fieldName)
     return isNotificationEnabled if isNotificationEnabled != None else False
 
-def fetchRangedUsers(start: datetime.datetime, end: datetime.datetime) -> list[dict]:
+def fetch_ranged_users(start: datetime.datetime, end: datetime.datetime) -> list[dict]:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     lastDoc = None
@@ -145,24 +137,15 @@ def fetchRangedUsers(start: datetime.datetime, end: datetime.datetime) -> list[d
     return users
     
 
-def fetchVideosByYouttubeVideoIds(youtubeVideoIds: list[str]):
+def fetch_videos_by_youtube_video_ids(youtubeVideoIds: list[str]):
     result = []
     for i in range(len(youtubeVideoIds)):
-        result.append(fetchVideoByYoutubeVideoId(youtubeVideoIds[i]))
+        result.append(fetch_video_by_youtube_video_id(youtubeVideoIds[i]))
     return result
 
-def fetchDocbyCollectionNameAndDocumentId(collectionName: str, documentId: str):
+def fetch_doc_by_collection_name_and_documentId(collectionName: str, documentId: str):
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
     docRef = db.collection(collectionName).document(documentId)
     return docRef.get()
-
-def updatedSeriesIdList(youtubeVideoIds: list[str]) -> list[str]:
-    seriesIds = []
-    for youtubeVideoId in youtubeVideoIds:
-        videoDocDict = fetchVideoByYoutubeVideoId(youtubeVideoId).to_dict()
-        if not 'playlistIds' in videoDocDict or videoDocDict['playlistIds'] == None:
-            continue
-        seriesIds.extend(videoDocDict['playlistIds'])
-    return (set(seriesIds))
