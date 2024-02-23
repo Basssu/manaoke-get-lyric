@@ -88,7 +88,6 @@ def setEachVideo(videoId: str, flavor: str, policy: dict, isNonStop: bool) -> bo
             languages=['ja'],
             )
 
-        # koreanCaptions, japaneseCaptions = makeValidCaptions(koreanCaptions, japaneseCaptions)
         koreanCaptions = deleteIfOneCaptionNotExist(koreanCaptions, japaneseCaptions)
         japaneseCaptions = deleteIfOneCaptionNotExist(japaneseCaptions, koreanCaptions)
 
@@ -341,31 +340,6 @@ def setPolicy() -> dict:
         processPolicy['playlistIds'] = cf.inputText('playlistIdsを入力してください。(複数の場合、","で区切ってください)').split(",")
     return processPolicy
 
-# def classifyYoutubeVideoDocs(youtubeVideoIds: list[str]) -> Tuple:
-#     musicVideoDocs: list = []
-#     videoVideoDocs: list = []
-#     for youtubeVideoId in youtubeVideoIds:
-#         videoDoc = ToFireStore.fetchVideoByYoutubeVideoId(youtubeVideoId)
-#         videoDocDict = videoDoc.to_dict()
-#         if videoDocDict == None or not 'category' in videoDocDict or videoDocDict['category'] == None:
-#             continue
-#         category = videoDocDict['category']
-#         if category == 'music':
-#             musicVideoDocs.append(videoDoc)
-#         elif category == 'video':
-#             videoVideoDocs.append(videoDoc)
-    
-#     return musicVideoDocs, videoVideoDocs
-
-# def videoVideoDocsToSeriesIds(videoVideoDocs: list) -> list:
-#     seriesIds = []
-#     for videoVideoDoc in videoVideoDocs:
-#         videoVideoDocDict = videoVideoDoc.to_dict()
-#         if videoVideoDocDict == None or not 'playlistIds' in videoVideoDocDict or videoVideoDocDict['playlistIds'] == None:
-#             continue
-#         seriesIds.extend(videoVideoDocDict['playlistIds'])
-#     return list(set(seriesIds))
-
 def setVideos(flavor: str, youtubeVideoIds: list[str] = None, isNonStop: bool = False):
     policy = setPolicy()
     youtubeVideoIds = youtubeVideoIds if youtubeVideoIds != None else inputVideoIds()
@@ -381,12 +355,6 @@ def setVideos(flavor: str, youtubeVideoIds: list[str] = None, isNonStop: bool = 
     completedVideos = ToFireStore.completedVideos(addedYoutubeVideoIds)
     completedVideoDocs = ToFireStore.fetchVideosByYouttubeVideoIds(completedVideos)
     Notification.sendCelebrityLikersByVideoDocs(completedVideoDocs)
-    
-    # musicVideoDocs, videoVideoDocs = classifyYoutubeVideoDocs(completedVideos)
-    # Notification.sendCelebrityLikersByMusicVideoDocs(musicVideoDocs)
-    # updatedSeriesIds = videoVideoDocsToSeriesIds(videoVideoDocs)
-    # for seriesId in updatedSeriesIds:
-    #     Notification.sendToSeriesLiker(seriesId)
 
 def main():
     flavor = cf.getFlavor()
