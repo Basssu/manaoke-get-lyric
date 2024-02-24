@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-import to_firestore as to_firestore
-import convenient_functions as cf
+from . import to_firestore as to_firestore
+from . import convenient_functions as cf
 import pytz
 
 def calculate_age(birthdate: datetime):
@@ -67,6 +67,3 @@ def main():
             return
         age = calculate_age(birthday)
         print(f'{age}歳')
-
-if __name__ == '__main__':
-    main()

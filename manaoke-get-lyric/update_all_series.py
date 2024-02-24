@@ -1,8 +1,8 @@
-import convenient_functions as cf
+from . import convenient_functions as cf
 from firebase_admin import firestore
-import get_youtube_data as get_youtube_data
+from . import get_youtube_data as get_youtube_data
 import datetime
-import set_video as set_video
+from . import set_video as set_video
 
 def get_collection_docs_as_dict_list(collection_name: str) -> list[dict]:
     db = firestore.client()
@@ -109,6 +109,3 @@ def main():
     if not cf.answered_yes('実際にこれらの動画を追加しますか？'):
         return
     set_video.set_videos(flavor = flavor, youtube_video_ids = all_video_ids)
-    
-if __name__ == '__main__':
-    main()

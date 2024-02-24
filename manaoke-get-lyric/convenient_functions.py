@@ -33,9 +33,9 @@ def initialize_firebase(flavor: str):
 
 def firebase_creds(flavor: str):
     if flavor == "prod":
-        return credentials.Certificate("../firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
+        return credentials.Certificate("firebaseKey/manaoke-8c082-firebase-adminsdk-37ba1-6de8dec42f.json")
     else:
-        return credentials.Certificate("../firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
+        return credentials.Certificate("firebaseKey/manaoke-stg-firebase-adminsdk-emiky-167e3b7113.json")
 
 def firebase_domain(flavor: str):
     if flavor == "prod":

@@ -1,7 +1,7 @@
 from firebase_admin import firestore
 from firebase_admin import messaging
 from typing import Optional
-import to_firestore as to_firestore
+from . import to_firestore as to_firestore
 
 def uids_to_device_tokens(uids: list[str]) -> list[str]:
     db = firestore.client()

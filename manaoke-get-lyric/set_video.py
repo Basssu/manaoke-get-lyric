@@ -1,11 +1,11 @@
-import convenient_functions as cf
+from . import convenient_functions as cf
 import youtube_transcript_api
-import make_firestore_map as make_firestore_map
-import to_firestore as to_firestore
+from . import make_firestore_map as make_firestore_map
+from . import to_firestore as to_firestore
 import pprint
 from typing import Optional, Tuple
-import notification
-import to_storage as to_storage
+from . import notification
+from . import to_storage as to_storage
 
 # ビデオIDを入力する
 def input_video_ids() -> list[str]:
@@ -163,6 +163,3 @@ def set_videos(flavor: str, youtube_video_ids: list[str] = None, is_non_stop: bo
 def main():
     flavor = cf.get_flavor()
     set_videos(flavor, is_non_stop = cf.answered_yes('動画ごとの確認をスキップしますか？'))
-
-if __name__ == '__main__':
-    main()

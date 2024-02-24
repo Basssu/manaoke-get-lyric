@@ -1,5 +1,5 @@
 import csv
-import to_firestore as to_firestore
+from . import to_firestore as to_firestore
 from datetime import datetime
 import os
 
@@ -56,6 +56,3 @@ def is_shift_jis_encodable(text):
         return True
     except UnicodeEncodeError:
         return False
-    
-if __name__ == '__main__':
-    main()

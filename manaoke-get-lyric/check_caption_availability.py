@@ -1,7 +1,7 @@
 from googleapiclient.discovery import build
 import youtube_transcript_api
-import convenient_functions as cf
-import get_youtube_data as get_youtube_data
+from . import convenient_functions as cf
+from . import get_youtube_data as get_youtube_data
 
 def video_ids_from_playlist_id(playlistId: str):
     video_ids = []
@@ -66,6 +66,3 @@ def main():
     playlist_id = cf.input_text('Playlist IDを入力')
     videoIds = video_ids_from_playlist_id(playlist_id)
     show_video_ids_with_caption(videoIds)
-
-if __name__ == '__main__':
-    main()

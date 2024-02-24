@@ -1,6 +1,6 @@
 from firebase_admin import firestore
 import firebase_admin
-import convenient_functions as cf
+from . import convenient_functions as cf
 from typing import Optional
 
 LAST_VIDEO_ID = None

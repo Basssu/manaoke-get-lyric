@@ -2,8 +2,8 @@ import os
 import sys
 sys.path.append(os.pardir)
 from googleapiclient.discovery import build
-import convenient_functions as cf
-import get_youtube_data as get_youtube_data
+from . import convenient_functions as cf
+from . import get_youtube_data as get_youtube_data
 import datetime
 import pytz
 

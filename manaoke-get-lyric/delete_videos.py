@@ -1,6 +1,6 @@
 from firebase_admin import firestore
 from firebase_admin import storage
-import convenient_functions as cf
+from . import convenient_functions as cf
 
 def delete_videos_from_firebase(videoIds: list[str], flavor: str):
     for videoId in videoIds:
@@ -46,6 +46,3 @@ def main():
     cf.initialize_firebase(flavor)
     videoIds = cf.input_text('削除したい動画のvideoId(例: ko_ja_0rtV5esQT6I)を入力(複数の場合、","で区切る)').split(',')
     delete_videos_from_firebase(videoIds, flavor)
-
-if __name__ == '__main__':
-    main()

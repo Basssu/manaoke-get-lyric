@@ -1,4 +1,4 @@
-import convenient_functions as cf
+from . import convenient_functions as cf
 from firebase_admin import firestore
 
 # likedByの配列の長さでソートする
@@ -19,6 +19,3 @@ def main():
         name = doc.to_dict().get("name", "")
         liked_by_length = get_liked_by_length(doc)
         print(f"likedBy Length: {liked_by_length}, Name: {name}")
-
-if __name__ == '__main__':
-    main()
