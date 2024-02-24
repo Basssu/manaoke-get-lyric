@@ -3,9 +3,9 @@ import youtube_transcript_api
 from . import convenient_functions as cf
 from . import get_youtube_data as get_youtube_data
 
-def video_ids_from_playlist_id(playlistId: str):
+def video_ids_from_playlist_id(playlist_id: str):
     video_ids = []
-    playlist_items = get_youtube_data.get_item_response_from_playlist(playlistId)
+    playlist_items = get_youtube_data.get_item_response_from_playlist(playlist_id)
     for i in range(len(playlist_items)):
         video_ids.append(playlist_items[i]['snippet']['resourceId']['videoId'])
     return video_ids

@@ -29,14 +29,14 @@ def get_videos_in_playlist(
 def built_youtube():
     return build('youtube', 'v3', developerKey=config.YOUTUBE_API_KEY)
 
-def get_item_response_from_playlist(youtubePlaylistId: str):
+def get_item_response_from_playlist(youtube_playlist_id: str):
     next_page_token = None
     playlist_item_list = []
     while 1: 
         playlist_items_response = get_videos_in_playlist(
-            youtubePlaylistId = youtubePlaylistId,
-            nextPageToken = next_page_token,
-            maxResults = 50,
+            youtube_playlist_id = youtube_playlist_id,
+            next_page_token = next_page_token,
+            max_results = 50,
         )
         for playlist_item in playlist_items_response["items"]:
             playlist_item_list.append(playlist_item)
