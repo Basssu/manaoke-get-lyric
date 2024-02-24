@@ -1,46 +1,46 @@
 import sys
 import os
 sys.path.append(os.pardir)
-from apiKey import config
+from api_key import config
 from googleapiclient.discovery import build
 from typing import Optional
 
-def getVideo(youtubeVideoId: str) -> Optional[dict]:
-    youtube = builtYoutube()
+def get_video(youtubeVideoId: str) -> Optional[dict]:
+    youtube = built_youtube()
     response = youtube.videos().list(part='snippet,contentDetails', id=youtubeVideoId).execute()
     if len(response['items']) == 0:
         return None
     return response['items'][0]
 
-def getVideosInPlaylist(
-        youtubePlaylistId: str,
-        nextPageToken: str = None,
-        maxResults: int = 1
+def get_videos_in_playlist(
+        youtube_playlist_id: str,
+        next_page_token: str = None,
+        max_results: int = 1
         ):
-    youtube = builtYoutube()
+    youtube = built_youtube()
     playlist_items_response = youtube.playlistItems().list(
             part="snippet",
-            playlistId = youtubePlaylistId,
-            maxResults = maxResults,
-            pageToken = nextPageToken
+            playlistId = youtube_playlist_id,
+            maxResults = max_results,
+            pageToken = next_page_token
             ).execute()
     return playlist_items_response
 
-def builtYoutube():
+def built_youtube():
     return build('youtube', 'v3', developerKey=config.YOUTUBE_API_KEY)
 
-def getItemResponseFromPlaylist(youtubePlaylistId: str):
+def get_item_response_from_playlist(youtubePlaylistId: str):
     next_page_token = None
-    playlistItemList = []
+    playlist_item_list = []
     while 1: 
-        playlist_items_response = getVideosInPlaylist(
+        playlist_items_response = get_videos_in_playlist(
             youtubePlaylistId = youtubePlaylistId,
             nextPageToken = next_page_token,
             maxResults = 50,
         )
         for playlist_item in playlist_items_response["items"]:
-            playlistItemList.append(playlist_item)
+            playlist_item_list.append(playlist_item)
         next_page_token = playlist_items_response.get('nextPageToken')
         if not next_page_token:
             break
-    return playlistItemList
+    return playlist_item_list

@@ -1,4 +1,4 @@
-import ConvenientFunctions as cf
+from . import convenient_functions as cf
 from firebase_admin import firestore
 
 # likedByの配列の長さでソートする
@@ -7,8 +7,8 @@ def get_liked_by_length(doc):
     return len(liked_by) if liked_by else 0
 
 def main():
-    flavor = cf.getFlavor()
-    cf.initializeFirebase(flavor)
+    flavor = cf.get_flavor()
+    cf.initialize_firebase(flavor)
     db = firestore.client()
     # Celebritiesコレクションの全ドキュメントを取得
     celebrities_ref = db.collection("celebrities")
@@ -19,6 +19,3 @@ def main():
         name = doc.to_dict().get("name", "")
         liked_by_length = get_liked_by_length(doc)
         print(f"likedBy Length: {liked_by_length}, Name: {name}")
-
-if __name__ == '__main__':
-    main()

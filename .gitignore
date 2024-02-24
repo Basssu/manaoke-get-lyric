@@ -1,7 +1,7 @@
 videos/
-firebaseKey/
-apiKey/
+firebase_key/
+api_key/
 uncompletedVideos/
 __pycache__/
-setVideo/__pycache__/
-setVideo/csv/
+manaoke-get-lyric/__pycache__/
+manaoke-get-lyric/csv/
