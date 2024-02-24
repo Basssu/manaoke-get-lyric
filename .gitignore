@@ -1,6 +1,6 @@
 videos/
-firebaseKey/
-apiKey/
+firebase_key/
+api_key/
 uncompletedVideos/
 __pycache__/
 manaoke-get-lyric/__pycache__/
