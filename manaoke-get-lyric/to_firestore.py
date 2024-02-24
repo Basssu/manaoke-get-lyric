@@ -27,8 +27,6 @@ def to_firestore(
             firestore_dict, 
             [
                 'isUncompletedVideo', 
-                'isWaitingForReview', 
-                'uncompletedJsonUrl'
                 ]
             )
         doc_ref.update(firestore_dict)
