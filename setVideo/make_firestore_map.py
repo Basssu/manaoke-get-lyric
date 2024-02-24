@@ -2,8 +2,8 @@ import os
 import sys
 sys.path.append(os.pardir)
 from googleapiclient.discovery import build
-import ConvenientFunctions as cf
-import GetYoutubeData
+import convenient_functions as cf
+import get_youtube_data as get_youtube_data
 import datetime
 import pytz
 
@@ -14,7 +14,7 @@ def make_firestore_map(
     has_translation_from: bool,
     has_translation_to: bool,
     ):
-    response = GetYoutubeData.get_video(video_id)
+    response = get_youtube_data.get_video(video_id)
     if response is None:
         print('動画情報無し')
         return None

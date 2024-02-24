@@ -1,7 +1,7 @@
 from firebase_admin import firestore
 from firebase_admin import messaging
 from typing import Optional
-import ToFireStore
+import to_firestore as to_firestore
 
 def uids_to_device_tokens(uids: list[str]) -> list[str]:
     db = firestore.client()
@@ -53,8 +53,8 @@ def send_notification_to_celebrity_likers(
     category: Optional[str] = None,
     id: Optional[str] = None,
     ):
-    celebrity_doc_dict = ToFireStore.fetch_doc_by_collection_name_and_documentId("celebrities", celebrity_id).to_dict()
-    liked_by = ToFireStore.celebrity_liker_uids(celebrity_id)
+    celebrity_doc_dict = to_firestore.fetch_doc_by_collection_name_and_documentId("celebrities", celebrity_id).to_dict()
+    liked_by = to_firestore.celebrity_liker_uids(celebrity_id)
     uids = uids_to_send_notification(liked_by, category)
     device_tokens = uids_to_device_tokens(uids)
     if body == None:
@@ -83,6 +83,6 @@ def send_celebrity_likers_by_video_docs(video_docs: list[firestore.DocumentSnaps
 def uids_to_send_notification(uids: list[str], category: str):
     result = []
     for uid in uids:
-        if ToFireStore.is_music_notification_enabled(uid, category):
+        if to_firestore.is_music_notification_enabled(uid, category):
             result.append(uid)
     return result

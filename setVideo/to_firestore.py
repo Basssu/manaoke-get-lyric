@@ -1,7 +1,6 @@
 from firebase_admin import firestore
 import firebase_admin
-import ConvenientFunctions as cf
-import pprint
+import convenient_functions as cf
 import datetime
 from typing import Optional
 

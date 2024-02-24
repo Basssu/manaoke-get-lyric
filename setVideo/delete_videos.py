@@ -1,6 +1,6 @@
 from firebase_admin import firestore
 from firebase_admin import storage
-import ConvenientFunctions as cf
+import convenient_functions as cf
 
 def delete_videos_from_firebase(videoIds: list[str], flavor: str):
     for videoId in videoIds:

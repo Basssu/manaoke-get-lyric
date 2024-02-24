@@ -1,4 +1,4 @@
-import ConvenientFunctions as cf
+import convenient_functions as cf
 from firebase_admin import firestore
 
 # likedByの配列の長さでソートする

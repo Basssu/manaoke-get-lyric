@@ -1,11 +1,11 @@
-import ConvenientFunctions as cf
+import convenient_functions as cf
 import youtube_transcript_api
-import MakeFirestoreMap
-import ToFireStore
+import make_firestore_map as make_firestore_map
+import to_firestore as to_firestore
 import pprint
 from typing import Optional, Tuple
-import Notification
-import NewToStorage
+import notification
+import to_storage as to_storage
 
 # ビデオIDを入力する
 def input_video_ids() -> list[str]:
@@ -38,7 +38,7 @@ def set_each_video(video_id: str, flavor: str, policy: dict, is_non_stop: bool) 
         is_uncompleted_video = False
         if not cf.answered_yes(f'{video_id}:字幕の行数は{len(korean_captions)}行です。続けますか？'):
             return False
-    firestore_map = MakeFirestoreMap.make_firestore_map(
+    firestore_map = make_firestore_map.make_firestore_map(
         video_id, 
         policy, 
         is_uncompleted_video, 
@@ -49,7 +49,7 @@ def set_each_video(video_id: str, flavor: str, policy: dict, is_non_stop: bool) 
     if not (korean_captions == None and japanese_captions == None):
         caption_json_url = get_caption_json_url(video_id, korean_captions, japanese_captions)
         
-    document = ToFireStore.to_firestore(firestore_map, flavor, f'ko_ja_{video_id}', caption_json_url)
+    document = to_firestore.to_firestore(firestore_map, flavor, f'ko_ja_{video_id}', caption_json_url)
     pprint.pprint(document) #Firestoreにアップロードした内容
     return True
 
@@ -99,7 +99,7 @@ def delete_if_one_caption_not_exist(main_captions: list[dict], sub_captions: lis
 
 def get_caption_json_url(video_id: str, main_captions: Optional[list[dict]], sub_captions: Optional[list[dict]]) -> str:
     data = make_caption_dict_list(main_captions, sub_captions)
-    url = NewToStorage.new_json_url(video_id, data)
+    url = to_storage.new_json_url(video_id, data)
     return url
 
 def make_caption_dict_list(main_captions: Optional[list[dict]], sub_captions: Optional[list[dict]]) -> list[dict]:
@@ -156,9 +156,9 @@ def set_videos(flavor: str, youtube_video_ids: list[str] = None, is_non_stop: bo
     print(f'追加した動画のYoutubeVideoID: {added_youtube_video_ids}')
     if not cf.answered_yes('通知処理に進みますか？'):
         return
-    completed_videos = ToFireStore.completed_videos(added_youtube_video_ids)
-    completed_video_docs = ToFireStore.fetch_videos_by_youtube_video_ids(completed_videos)
-    Notification.send_celebrity_likers_by_video_docs(completed_video_docs)
+    completed_videos = to_firestore.completed_videos(added_youtube_video_ids)
+    completed_video_docs = to_firestore.fetch_videos_by_youtube_video_ids(completed_videos)
+    notification.send_celebrity_likers_by_video_docs(completed_video_docs)
 
 def main():
     flavor = cf.get_flavor()

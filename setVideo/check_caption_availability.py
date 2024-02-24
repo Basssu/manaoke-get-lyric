@@ -1,11 +1,11 @@
 from googleapiclient.discovery import build
 import youtube_transcript_api
-import ConvenientFunctions as cf
-import GetYoutubeData
+import convenient_functions as cf
+import get_youtube_data as get_youtube_data
 
 def video_ids_from_playlist_id(playlistId: str):
     video_ids = []
-    playlist_items = GetYoutubeData.get_item_response_from_playlist(playlistId)
+    playlist_items = get_youtube_data.get_item_response_from_playlist(playlistId)
     for i in range(len(playlist_items)):
         video_ids.append(playlist_items[i]['snippet']['resourceId']['videoId'])
     return video_ids

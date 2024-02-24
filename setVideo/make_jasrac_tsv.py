@@ -1,10 +1,10 @@
 import csv
-import ToFireStore
+import to_firestore as to_firestore
 from datetime import datetime
 import os
 
 def main():
-    video_doc_list = ToFireStore.fetch_jasrac_code_list()
+    video_doc_list = to_firestore.fetch_jasrac_code_list()
     current_time = datetime.now()
     
     directory = 'csv'

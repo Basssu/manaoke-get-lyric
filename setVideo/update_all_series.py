@@ -1,8 +1,8 @@
-import ConvenientFunctions as cf
+import convenient_functions as cf
 from firebase_admin import firestore
-import GetYoutubeData
+import get_youtube_data as get_youtube_data
 import datetime
-import SetVideo
+import set_video as set_video
 
 def get_collection_docs_as_dict_list(collection_name: str) -> list[dict]:
     db = firestore.client()
@@ -52,7 +52,7 @@ def fetch_latest_video_ids_when_desendant(latest_video_doc_dict: dict, youtube_p
     video_ids = []
     next_pagetoken = None
     for i in range(50): #while1だと無限ループになる可能性があるので
-        playlist_items_response = GetYoutubeData.get_videos_in_playlist(
+        playlist_items_response = get_youtube_data.get_videos_in_playlist(
             youtube_playlist_id = youtube_playlist_id,
             max_results= 1,
             next_page_token = next_pagetoken
@@ -64,7 +64,7 @@ def fetch_latest_video_ids_when_desendant(latest_video_doc_dict: dict, youtube_p
         next_pagetoken = playlist_items_response.get("nextPageToken")
 
 def fetch_latest_video_ids_when_asendant(latest_video_doc_dict: dict, youtube_playlist_id: str) -> list[str]:
-    playlist_items_response = GetYoutubeData.get_item_response_from_playlist(youtube_playlist_id)
+    playlist_items_response = get_youtube_data.get_item_response_from_playlist(youtube_playlist_id)
     video_ids = []
     for playlist_item in playlist_items_response:
         published_at = published_at_from_item_response(playlist_item)
@@ -73,7 +73,7 @@ def fetch_latest_video_ids_when_asendant(latest_video_doc_dict: dict, youtube_pl
     return video_ids
 
 def is_descendant_of_series(latest_video_doc_dict: dict, youtube_playlist_id: str) -> bool: #Youtubeプレイリストがアップロード日時の降順になっているか
-    response = GetYoutubeData.get_videos_in_playlist(
+    response = get_youtube_data.get_videos_in_playlist(
     youtube_playlist_id = youtube_playlist_id,
     max_results = 1
     )
@@ -82,7 +82,7 @@ def is_descendant_of_series(latest_video_doc_dict: dict, youtube_playlist_id: st
 
 def published_at_from_item_response(video_response) -> datetime.datetime:
     youtube_video_id = video_response["snippet"]["resourceId"]["videoId"]
-    response = GetYoutubeData.get_video(youtube_video_id) #動画一本釣りとplaylist経由での動画だとpublishedAtがズレるため
+    response = get_youtube_data.get_video(youtube_video_id) #動画一本釣りとplaylist経由での動画だとpublishedAtがズレるため
     return datetime.datetime.fromisoformat(response['snippet']['publishedAt'].replace('Z', '+00:00'))
 
 def merge_and_remove_duplicates(dict_data: dict) -> list[str]:
@@ -108,7 +108,7 @@ def main():
     print(','.join(all_video_ids)) #追加するべき動画のvideoIdを出力
     if not cf.answered_yes('実際にこれらの動画を追加しますか？'):
         return
-    SetVideo.set_videos(flavor = flavor, youtube_video_ids = all_video_ids)
+    set_video.set_videos(flavor = flavor, youtube_video_ids = all_video_ids)
     
 if __name__ == '__main__':
     main()
