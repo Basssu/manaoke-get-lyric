@@ -13,16 +13,16 @@ def get_video(youtubeVideoId: str) -> Optional[dict]:
     return response['items'][0]
 
 def get_videos_in_playlist(
-        youtubePlaylistId: str,
-        nextPageToken: str = None,
-        maxResults: int = 1
+        youtube_playlist_id: str,
+        next_page_token: str = None,
+        max_results: int = 1
         ):
     youtube = built_youtube()
     playlist_items_response = youtube.playlistItems().list(
             part="snippet",
-            playlistId = youtubePlaylistId,
-            maxResults = maxResults,
-            pageToken = nextPageToken
+            playlistId = youtube_playlist_id,
+            maxResults = max_results,
+            pageToken = next_page_token
             ).execute()
     return playlist_items_response
 
@@ -31,7 +31,7 @@ def built_youtube():
 
 def get_item_response_from_playlist(youtubePlaylistId: str):
     next_page_token = None
-    playlistItemList = []
+    playlist_item_list = []
     while 1: 
         playlist_items_response = get_videos_in_playlist(
             youtubePlaylistId = youtubePlaylistId,
@@ -39,8 +39,8 @@ def get_item_response_from_playlist(youtubePlaylistId: str):
             maxResults = 50,
         )
         for playlist_item in playlist_items_response["items"]:
-            playlistItemList.append(playlist_item)
+            playlist_item_list.append(playlist_item)
         next_page_token = playlist_items_response.get('nextPageToken')
         if not next_page_token:
             break
-    return playlistItemList
+    return playlist_item_list

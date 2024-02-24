@@ -5,42 +5,42 @@ import ToFireStore
 
 def uids_to_device_tokens(uids: list[str]) -> list[str]:
     db = firestore.client()
-    deviceTokens = []
+    device_tokens = []
     for uid in uids:
         try:
-            deviceToken = db.collection('users').document(uid).get().to_dict()['deviceToken']
+            device_token = db.collection('users').document(uid).get().to_dict()['deviceToken']
         except:
-            deviceToken = None
-        if(deviceToken != None):
-            deviceTokens.append(deviceToken)
+            device_token = None
+        if(device_token != None):
+            device_tokens.append(device_token)
 
-    return deviceTokens
+    return device_tokens
 
 def send_notification_by_device_token(
-        deviceTokens: list[str], 
+        device_tokens: list[str], 
         title: str, 
         body: str,
         data: dict[str, str] = {},
         ):
-    print(f'合計{len(deviceTokens)}人に通知を送信します。')
+    print(f'合計{len(device_tokens)}人に通知を送信します。')
     try:
-        sendableTokens = []
-        for i in range(len(deviceTokens)): # MulticastMessageで一度に送れるのは500人までのため
-            sendableTokens.append(deviceTokens[i])
-            if (i + 1) % 500 != 0 and i != len(deviceTokens) - 1:
+        sendable_tokens = []
+        for i in range(len(device_tokens)): # MulticastMessageで一度に送れるのは500人までのため
+            sendable_tokens.append(device_tokens[i])
+            if (i + 1) % 500 != 0 and i != len(device_tokens) - 1:
                 continue
             message = messaging.MulticastMessage(
             notification=messaging.Notification(
                 title=title,
                 body=body,
                 ),
-            tokens=sendableTokens,
+            tokens=sendable_tokens,
             data=data,
             )
             response = messaging.send_multicast(message)
             print('Successfully sent message:', response)
-            print(f'{len(deviceTokens)}人中の{len(sendableTokens)}人に送信完了。')
-            sendableTokens.clear()
+            print(f'{len(device_tokens)}人中の{len(sendable_tokens)}人に送信完了。')
+            sendable_tokens.clear()
     except Exception as e:
         print('=== エラー内容 ===')
         print('type:' + str(type(e)))
@@ -48,37 +48,37 @@ def send_notification_by_device_token(
         print('e自身:' + str(e))
 
 def send_notification_to_celebrity_likers(
-    celebrityId: str, 
+    celebrity_id: str, 
     body: Optional[str] = None,
     category: Optional[str] = None,
     id: Optional[str] = None,
     ):
-    CelebrityDocDict = ToFireStore.fetch_doc_by_collection_name_and_documentId("celebrities", celebrityId).to_dict()
-    likedBy = ToFireStore.celebrity_liker_uids(celebrityId)
-    uids = uids_to_send_notification(likedBy, category)
-    deviceTokens = uids_to_device_tokens(uids)
+    celebrity_doc_dict = ToFireStore.fetch_doc_by_collection_name_and_documentId("celebrities", celebrity_id).to_dict()
+    liked_by = ToFireStore.celebrity_liker_uids(celebrity_id)
+    uids = uids_to_send_notification(liked_by, category)
+    device_tokens = uids_to_device_tokens(uids)
     if body == None:
         body = '韓国語を理解しながら楽しもう！'
-    title = f'{CelebrityDocDict["name"]}の新着動画'
+    title = f'{celebrity_doc_dict["name"]}の新着動画'
     if category == 'music':
-        title =  f'{CelebrityDocDict["name"]}の曲が追加されました！'
+        title =  f'{celebrity_doc_dict["name"]}の曲が追加されました！'
     elif category == 'video':
-        title = f'{CelebrityDocDict["name"]}の新着エピソード'
-    print(f'{CelebrityDocDict["name"]}をお気に入り登録している人に通知を送信します' if CelebrityDocDict['name'] != None else '')
-    send_notification_by_device_token(deviceTokens, title, body, {'id': id, 'route': 'video'} if id != None else {})
+        title = f'{celebrity_doc_dict["name"]}の新着エピソード'
+    print(f'{celebrity_doc_dict["name"]}をお気に入り登録している人に通知を送信します' if celebrity_doc_dict['name'] != None else '')
+    send_notification_by_device_token(device_tokens, title, body, {'id': id, 'route': 'video'} if id != None else {})
 
-def send_celebrity_likers_by_video_docs(videoDocs: list[firestore.DocumentSnapshot]):
-    for videoDoc in videoDocs:
-        videoDocDict = videoDoc.to_dict()
-        celebrityIds = videoDocDict.get('celebrityIds')
-        category = videoDocDict.get('category')
+def send_celebrity_likers_by_video_docs(video_docs: list[firestore.DocumentSnapshot]):
+    for video_doc in video_docs:
+        video_doc_dict = video_doc.to_dict()
+        celebrity_ids = video_doc_dict.get('celebrityIds')
+        category = video_doc_dict.get('category')
         body = ''
         if category == 'music':
-            body = body = f'「{videoDocDict["title"]}」を韓国語で歌おう♫'
+            body = body = f'「{video_doc_dict["title"]}」を韓国語で歌おう♫'
         else:
-            body = f'「{videoDocDict["title"]}」を韓国語で楽しもう！'
-        for celebrityId in celebrityIds if celebrityIds != None else [] :
-            send_notification_to_celebrity_likers(celebrityId, body, category, videoDoc.id)
+            body = f'「{video_doc_dict["title"]}」を韓国語で楽しもう！'
+        for celebrity_id in celebrity_ids if celebrity_ids != None else [] :
+            send_notification_to_celebrity_likers(celebrity_id, body, category, video_doc.id)
             
 def uids_to_send_notification(uids: list[str], category: str):
     result = []

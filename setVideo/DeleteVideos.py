@@ -7,29 +7,29 @@ def delete_videos_from_firebase(videoIds: list[str], flavor: str):
         delete_video_from_firebase(videoId, flavor)
 
 def delete_video_from_firebase(videoId: str, flavor: str):
-    delete_document_from_firebase('videos', videoId, willDeleteSubcollections=True)
+    delete_document_from_firebase('videos', videoId, will_delete_subcollections=True)
     delete_from_firebase_storage(f'videos/{videoId}/allData.json', flavor)
     delete_from_firebase_storage(f'videos/{videoId}/caption.json', flavor)
     delete_from_firebase_storage(f'uncompletedVideos/{videoId}/caption.json', flavor)
 
 def delete_document_from_firebase(
-        collectionName: str,
-        documentId: str, 
-        willDeleteSubcollections: bool = False, 
+        collection_name: str,
+        document_id: str, 
+        will_delete_subcollections: bool = False, 
         ):
     db = firestore.client()
-    doc_ref = db.collection(collectionName).document(documentId)
+    doc_ref = db.collection(collection_name).document(document_id)
     doc_ref.delete()
     subcollections = doc_ref.collections()
-    if willDeleteSubcollections: # サブコレクションの削除
+    if will_delete_subcollections: # サブコレクションの削除
         for subcollection in subcollections:
             delete_subcollection(subcollection)
 
-def delete_subcollection(collectionRef):
-    documents = collectionRef.stream()
+def delete_subcollection(collection_ref):
+    documents = collection_ref.stream()
     for document in documents:
         document.reference.delete()
-    collectionRef.delete()
+    collection_ref.delete()
 
 # 使用例
 def delete_from_firebase_storage(path: str, flavor: str):

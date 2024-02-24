@@ -6,37 +6,37 @@ import datetime
 from typing import Optional
 
 def to_firestore(
-        firestoreDict: dict, 
+        firestore_dict: dict, 
         flavor: str, 
-        documentId: str,
-        captionJsonUrl: Optional[str],
+        document_id: str,
+        caption_json_url: Optional[str],
         ):
     if not firebase_admin._apps:
         cf.firebaseInitialize(flavor)
     db = firestore.client()
-    print(captionJsonUrl)
-    if captionJsonUrl != None:
-        firestoreDict["captionJsonUrl"] = captionJsonUrl
+    print(caption_json_url)
+    if caption_json_url != None:
+        firestore_dict["captionJsonUrl"] = caption_json_url
         
-    doc_ref = db.collection('videos').document(documentId)
+    doc_ref = db.collection('videos').document(document_id)
     # ドキュメントの存在を確認
     doc = doc_ref.get()
     if doc.exists:
         print('既存のドキュメントが存在します')
         # 既存のドキュメントがある場合はフィールドの値を更新
         delete_keys_from_dict( # 以下のフィールドは更新しない
-            firestoreDict, 
+            firestore_dict, 
             [
                 'isUncompletedVideo', 
                 'isWaitingForReview', 
                 'uncompletedJsonUrl'
                 ]
             )
-        doc_ref.update(firestoreDict)
+        doc_ref.update(firestore_dict)
     else:
         # 存在しない場合は新しいドキュメントを作成
-        doc_ref.set(firestoreDict)
-    return firestoreDict
+        doc_ref.set(firestore_dict)
+    return firestore_dict
 
 def delete_keys_from_dict(dict: dict, keys: list[str]):
     for key in keys:
@@ -44,28 +44,28 @@ def delete_keys_from_dict(dict: dict, keys: list[str]):
             del dict[key]
     return dict
 
-def celebrity_liker_uids(celebrityId: str) -> list[str]:
+def celebrity_liker_uids(celebrity_id: str) -> list[str]:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
-    celebrityDocs = db.collection_group('likedCelebrities').where('celebrityId', '==', celebrityId).get()
+    celebrity_docs = db.collection_group('likedCelebrities').where('celebrityId', '==', celebrity_id).get()
     uids = []
-    for celebrityDoc in celebrityDocs:
-        uids.append(celebrityDoc.reference.parent.parent.id)
+    for celebrity_doc in celebrity_docs:
+        uids.append(celebrity_doc.reference.parent.parent.id)
     return list(set(uids)) #重複削除(念の為)
 
-def completed_videos(youtubeVideoIds: list[str]) -> list[str]:
+def completed_videos(youtube_video_ids: list[str]) -> list[str]:
     result = []
-    for youtubeVideoId in youtubeVideoIds:
-        if is_completed_video(youtubeVideoId):
-            result.append(youtubeVideoId)
+    for youtube_video_id in youtube_video_ids:
+        if is_completed_video(youtube_video_id):
+            result.append(youtube_video_id)
     return result
 
-def is_completed_video(youtubeVideoId: str) -> bool:
-    videoDocDict = fetch_video_by_youtube_video_id(youtubeVideoId).to_dict()
-    if not 'isUncompletedVideo' in videoDocDict or videoDocDict['isUncompletedVideo'] == None:
+def is_completed_video(youtube_video_id: str) -> bool:
+    video_doc_dict = fetch_video_by_youtube_video_id(youtube_video_id).to_dict()
+    if not 'isUncompletedVideo' in video_doc_dict or video_doc_dict['isUncompletedVideo'] == None:
         return False
-    if videoDocDict['isUncompletedVideo'] == False:
+    if video_doc_dict['isUncompletedVideo'] == False:
         return True
     return False
 
@@ -73,29 +73,29 @@ def fetch_jasrac_code_list():
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
-    videoDocs = db.collection('videos').order_by('jasracCode').get()
+    video_docs = db.collection('videos').order_by('jasracCode').get()
     print('取得したドキュメント数')
-    print(len(videoDocs))
-    return videoDocs
+    print(len(video_docs))
+    return video_docs
 
 def fetch_user_by_uid(uid: str):
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
-    userDoc = db.collection('users').document(uid).get()
-    return userDoc
+    user_doc = db.collection('users').document(uid).get()
+    return user_doc
 
 def fetch_user_birthday_by_uids(uid: str) -> Optional[datetime.datetime]:
-    userDoc = fetch_user_by_uid(uid)
-    birthday = userDoc.to_dict().get('birthday')
+    user_doc = fetch_user_by_uid(uid)
+    birthday = user_doc.to_dict().get('birthday')
     return birthday
 
-def fetch_video_by_youtube_video_id(youtubeVideoId: str):
+def fetch_video_by_youtube_video_id(youtube_video_id: str):
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
     videos_ref = db.collection('videos')
-    query = videos_ref.where('videoId', '==', youtubeVideoId).limit(1)
+    query = videos_ref.where('videoId', '==', youtube_video_id).limit(1)
     list = query.get()
     print('長さ')
     print(len(list))
@@ -105,12 +105,12 @@ def is_music_notification_enabled(uid: str, category: str) -> bool:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
-    docRef = db.collection('users').document(uid)
-    fieldName = 'isMusicNotificationEnabled'
+    doc_ref = db.collection('users').document(uid)
+    field_name = 'isMusicNotificationEnabled'
     if category == 'video':
-        fieldName = 'isVideoNotificationEnabled'
-    isNotificationEnabled = docRef.get().to_dict().get(fieldName)
-    return isNotificationEnabled if isNotificationEnabled != None else False
+        field_name = 'isVideoNotificationEnabled'
+    is_notification_enabled = doc_ref.get().to_dict().get(field_name)
+    return is_notification_enabled if is_notification_enabled != None else False
 
 def fetch_ranged_users(start: datetime.datetime, end: datetime.datetime) -> list[dict]:
     if not firebase_admin._apps:
@@ -137,15 +137,15 @@ def fetch_ranged_users(start: datetime.datetime, end: datetime.datetime) -> list
     return users
     
 
-def fetch_videos_by_youtube_video_ids(youtubeVideoIds: list[str]):
+def fetch_videos_by_youtube_video_ids(youtube_video_ids: list[str]):
     result = []
-    for i in range(len(youtubeVideoIds)):
-        result.append(fetch_video_by_youtube_video_id(youtubeVideoIds[i]))
+    for i in range(len(youtube_video_ids)):
+        result.append(fetch_video_by_youtube_video_id(youtube_video_ids[i]))
     return result
 
-def fetch_doc_by_collection_name_and_documentId(collectionName: str, documentId: str):
+def fetch_doc_by_collection_name_and_documentId(collection_name: str, document_id: str):
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
-    docRef = db.collection(collectionName).document(documentId)
-    return docRef.get()
+    doc_ref = db.collection(collection_name).document(document_id)
+    return doc_ref.get()

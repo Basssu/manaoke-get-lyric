@@ -11,26 +11,26 @@ jsonFileName = 'caption.json'
 def new_json_url(videoId: str, data: str) -> str:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
-    filePath = json_file_path(videoId, data)
+    file_path = json_file_path(videoId, data)
     app = firebase_admin.get_app()
     domain = app.options.get('storageBucket')
     bucket = storage.bucket(domain)
-    blob = bucket.blob(filePath)
+    blob = bucket.blob(file_path)
     token = uuid4()
     blob.metadata = {"firebaseStorageDownloadTokens": token}
-    blob.upload_from_filename(filePath)
+    blob.upload_from_filename(file_path)
     url = f'https://firebasestorage.googleapis.com/v0/b/{domain}/o/{videosDir}%2F{videoId}%2F{jsonFileName}?alt=media&token={token}'
-    os.remove(filePath)
+    os.remove(file_path)
     return url
 
-def json_file_path(videoId: str, data: str) -> str:
-    dir = f'{videosDir}/{videoId}/'
+def json_file_path(video_id: str, data: str) -> str:
+    dir = f'{videosDir}/{video_id}/'
     make_directory(dir)
-    filePath = f'{dir}{jsonFileName}'
-    jsonData = json.dumps(data, indent=4, ensure_ascii=False)
-    with open(filePath, 'w', encoding='utf-8') as f:
-            f.write(jsonData)
-    return filePath
+    file_path = f'{dir}{jsonFileName}'
+    json_data = json.dumps(data, indent=4, ensure_ascii=False)
+    with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(json_data)
+    return file_path
 
 def make_directory(dir: str) -> None:
     if not os.path.exists(dir):

@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 def main():
-    videoDocList = ToFireStore.fetch_jasrac_code_list()
+    video_doc_list = ToFireStore.fetch_jasrac_code_list()
     current_time = datetime.now()
     
     directory = 'csv'
@@ -15,14 +15,14 @@ def main():
     csv_filename = f"csv/videos_with_jasracCode_{formatted_time}.txt"
     with open(csv_filename, "w", newline="", encoding='shift_jis') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter='\t')
-        jasracCodeList = []
-        recordsCount = 0
-        for doc in videoDocList:
+        jasrac_code_list = []
+        records_count = 0
+        for doc in video_doc_list:
             data = doc.to_dict()
-            if jasracCodeList.count(data.get("jasracCode")) > 0 or data.get("jasracCode") == None:
+            if jasrac_code_list.count(data.get("jasracCode")) > 0 or data.get("jasracCode") == None:
                 continue
-            jasracCodeList.append(data.get("jasracCode"))
-            recordsCount += 1
+            jasrac_code_list.append(data.get("jasracCode"))
+            records_count += 1
             title = data.get("title")
             if not is_shift_jis_encodable(title):
                 title = '変換不可'
@@ -48,7 +48,7 @@ def main():
                 "0", #リクエスト回数
                 ])
     print("報告レコード数")
-    print(recordsCount)
+    print(records_count)
     
 def is_shift_jis_encodable(text):
     try:

@@ -3,15 +3,13 @@ import firebase_admin
 import ConvenientFunctions as cf
 from typing import Optional
 
-videosDir = 'videos'
-jsonFileName = 'caption.json'
-lastVideoId = None
+LAST_VIDEO_ID = None
 
 def get_video_doc_byId() -> Optional[firestore.DocumentSnapshot]:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
     db = firestore.client()
-    doc = db.collection('videos').document(lastVideoId).get()
+    doc = db.collection('videos').document(LAST_VIDEO_ID).get()
     if doc.exists:
         return doc
     else:
@@ -20,27 +18,27 @@ def get_video_doc_byId() -> Optional[firestore.DocumentSnapshot]:
 def do():
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
-    lastDoc = get_video_doc_byId()
+    last_doc = get_video_doc_byId()
     db = firestore.client()
     query = db.collection('videos').order_by('publishedAt').limit(1)
     count = 0
     while True:
         print(f'count: {count}')
         count = count + 1
-        if lastDoc == None:
+        if last_doc == None:
             docs = query.get()
         else:
-            docs = query.start_after(lastDoc).get()
+            docs = query.start_after(last_doc).get()
         if len(docs) == 0:
             break
-        videoId = docs[0].reference.id
-        print(f'処理中のvideoId: {videoId}')
+        video_id = docs[0].reference.id
+        print(f'処理中のvideoId: {video_id}')
         video = docs[0].to_dict()
-        lastDoc = docs[0]
+        last_doc = docs[0]
         if video.get('isUncompletedVideo') == False:
-            db.collection('videos').document(videoId).update({'isVerified': True})
+            db.collection('videos').document(video_id).update({'isVerified': True})
         else:
-            db.collection('videos').document(videoId).update({'isVerified': False})
+            db.collection('videos').document(video_id).update({'isVerified': False})
     return
 
 def main():
