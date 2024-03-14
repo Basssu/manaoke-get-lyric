@@ -4,6 +4,7 @@ from . import count_liked_by
 from . import delete_videos
 from . import make_celebrities_tokens
 from . import make_jasrac_tsv
+from . import send_sale_notification
 from . import set_video
 from . import update_all_series
 
@@ -15,9 +16,10 @@ if __name__ == '__main__':
     print('4. Delete videos')
     print('5. Make celebrities tokens')
     print('6. Make JASRAC tsv')
-    print('7. Set video')
-    print('8. Update all series')
-    choice = input("Enter your choice (1 - 8): ")
+    print('7. Send sale notification')
+    print('8. Set video')
+    print('9. Update all series')
+    choice = input("Enter your choice (1 - 9): ")
     
     if choice == '1':
         check_caption_availability.main()
@@ -32,6 +34,8 @@ if __name__ == '__main__':
     elif choice == '6':
         make_jasrac_tsv.main()
     elif choice == '7':
-        set_video.main()
+        send_sale_notification.main()
     elif choice == '8':
+        set_video.main()
+    elif choice == '9':
         update_all_series.main()

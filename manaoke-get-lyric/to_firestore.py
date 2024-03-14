@@ -66,6 +66,14 @@ def is_completed_video(youtube_video_id: str) -> bool:
         return True
     return False
 
+def fetch_all_user_ids() -> list[str]:
+    if not firebase_admin._apps:
+        cf.initialize_firebase(cf.get_flavor())
+    db = firestore.client()
+    docs_ref = db.collection("users").list_documents()
+    doc_ids = [doc.id for doc in docs_ref]
+    return doc_ids
+
 def fetch_jasrac_code_list():
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
@@ -81,6 +89,14 @@ def fetch_user_by_uid(uid: str):
     db = firestore.client()
     user_doc = db.collection('users').document(uid).get()
     return user_doc
+
+def fetch_user_count() -> int:
+    if not firebase_admin._apps:
+        cf.initialize_firebase(cf.get_flavor())
+    db = firestore.client()
+    count_get = db.collection('users').count().get()
+    for count in count_get:
+        return count[0].value
 
 def fetch_user_birthday_by_uids(uid: str) -> Optional[datetime.datetime]:
     user_doc = fetch_user_by_uid(uid)
