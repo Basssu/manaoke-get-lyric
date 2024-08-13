@@ -59,11 +59,7 @@ def main():
         day = int(input('day: '))
         weekly_downloads(year, month, day)
     else:
-        print('年齢を取得したいuidは？')
-        uid = input('uid: ')
-        birthday = to_firestore.fetch_user_birthday_by_uids(uid)
-        if birthday == None:
-            print('誕生日が取得できませんでした')
-            return
-        age = calculate_age(birthday)
-        print(f'{age}歳')
+        print('年齢を取得したいuidは？(複数の場合","で区切る)')
+        uids = input('uids: ').split(',')
+        users = to_firestore.fetch_users_by_uids(uids)
+        show_downloads_by_age(users)

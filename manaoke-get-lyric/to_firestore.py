@@ -90,6 +90,17 @@ def fetch_user_by_uid(uid: str):
     user_doc = db.collection('users').document(uid).get()
     return user_doc
 
+def fetch_users_by_uids(uids: list[str]) -> list[dict]:
+    if not firebase_admin._apps:
+        cf.initialize_firebase(cf.get_flavor())
+    db = firestore.client()
+    users = []
+    for uid in uids:
+        print(uid)
+        user_doc = fetch_user_by_uid(uid)
+        users.append(user_doc.to_dict())
+    return users
+
 def fetch_user_count() -> int:
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
@@ -97,12 +108,7 @@ def fetch_user_count() -> int:
     count_get = db.collection('users').count().get()
     for count in count_get:
         return count[0].value
-
-def fetch_user_birthday_by_uids(uid: str) -> Optional[datetime.datetime]:
-    user_doc = fetch_user_by_uid(uid)
-    birthday = user_doc.to_dict().get('birthday')
-    return birthday
-
+    
 def fetch_video_by_youtube_video_id(youtube_video_id: str):
     if not firebase_admin._apps:
         cf.initialize_firebase(cf.get_flavor())
