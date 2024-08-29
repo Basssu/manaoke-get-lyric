@@ -61,17 +61,17 @@ def fetch_captions(videoId: str) -> Tuple[Optional[list[dict]], Optional[list[di
         print('この動画には字幕がありません')
         return korean_captions, japanese_captions
     if 'ko' in available_languages:
-        print('この動画には韓国語字幕があります')
         korean_captions = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(
             videoId, 
             languages=['ko'],
             )
+        print(f'この動画には{len(korean_captions)}行の韓国語字幕があります')
     if 'ja' in available_languages:
-        print('この動画には日本語字幕があります')
         japanese_captions = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(
             videoId,
             languages=['ja'],
             )
+        print(f'この動画には{len(japanese_captions)}行の日本語字幕があります')
     return korean_captions, japanese_captions
 
 def check_caption_availability(videoId: str) -> list[str]:
